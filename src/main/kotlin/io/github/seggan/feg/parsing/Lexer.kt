@@ -3,27 +3,32 @@ package io.github.seggan.feg.parsing
 object Lexer {
     fun lex(input: String): List<Token> {
         val tokens = mutableListOf<Token>()
-        val iterator = input.iterator()
-        while (iterator.hasNext()) {
-            val c = iterator.nextChar()
+        var i = 0
+        while (i < input.length) {
+            val c = input[i++]
             if (c in "\t\n\r ") {
                 continue
             } else if (c == '"') {
                 val result = buildString {
-                    while (iterator.hasNext()) {
-                        if (iterator.nextChar() == '"') break
-                        append(iterator.nextChar())
+                    while (i < input.length) {
+                        val char = input[i++]
+                        if (char == '"') {
+                            break
+                        } else {
+                            append(char)
+                        }
                     }
                 }
                 tokens.add(Token(TokenType.STRING, result))
             } else if (c.code in 48..57) {
                 val result = StringBuilder()
                 result.append(c)
-                while (iterator.hasNext()) {
-                    val char = iterator.nextChar()
-                    if (char.code in 48..57) {
-                        result.append(c)
+                while (i < input.length) {
+                    val char = input[i++]
+                    if (char.code in 48..57 || char == '.') {
+                        result.append(char)
                     } else {
+                        i--
                         break
                     }
                 }

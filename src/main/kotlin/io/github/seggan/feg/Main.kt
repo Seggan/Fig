@@ -1,5 +1,6 @@
 package io.github.seggan.feg
 
+import io.github.seggan.feg.parsing.Lexer
 import java.io.File
 
 const val CODEPAGE = "\t\n !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
@@ -10,4 +11,5 @@ fun main(args: Array<String>) {
         return
     }
     val code = File(args[0]).readText()
+    println(Lexer.lex(code))
 }
