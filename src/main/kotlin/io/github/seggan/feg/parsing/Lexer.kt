@@ -34,17 +34,14 @@ object Lexer {
                 }
                 tokens.add(Token(TokenType.NUMBER, result.toString()))
             } else {
-                tokens.add(
-                    Token(
-                        when (c) {
-                            ';' -> TokenType.SEPARATOR
-                            '(' -> TokenType.LAMBDA
-                            ')' -> TokenType.CLOSER
-                            '`' -> TokenType.LIST
-                            else -> TokenType.OPERATOR
-                        }, c.toString()
-                    )
-                )
+                val type = when (c) {
+                    ';' -> TokenType.SEPARATOR
+                    '(' -> TokenType.LAMBDA
+                    ')' -> TokenType.CLOSER
+                    '`' -> TokenType.LIST
+                    else -> TokenType.OPERATOR
+                }
+                tokens.add(Token(type, c.toString() + (if (c in "cmr") input[i++] else "")))
             }
         }
         return tokens

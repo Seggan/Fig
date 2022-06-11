@@ -11,5 +11,5 @@ fun main(args: Array<String>) {
         return
     }
     val code = File(args[0]).readText()
-    println(Lexer.lex(code))
+    val lexed = Lexer.lex(code)
 }
