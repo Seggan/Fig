@@ -10,7 +10,7 @@ object Interpreter {
 
     private lateinit var value: Any
 
-    fun compile(ast: List<Node>) {
+    fun interpret(ast: List<Node>) {
         visit(ast)
         println(value)
     }
@@ -63,10 +63,15 @@ private fun execute(op: Operator, operands: List<Any>): Any {
                 }
             }
         }
+        val ins = if (op.arity == -1) {
+            arrayOf(List::class.java)
+        } else {
+            Array(op.arity) { Any::class.java }
+        }
         lookup.findStatic(
             clazz, name,
-            MethodType.methodType(Any::class.java, operands.map { it::class.java }.toTypedArray())
+            MethodType.methodType(Any::class.java, ins)
         )
     }
-    return handle.invokeWithArguments(operands)
+    return handle.invokeWithArguments(if (op.arity == -1) listOf(operands) else operands)
 }

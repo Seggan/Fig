@@ -9,11 +9,11 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     MOD("%", 2),
     AND("&", 2),
     // ' is function ref
-    MUL("*", 2),
-    PLUS("+", 2),
+    MULTIPLY("*", 2),
+    ADD("+", 2),
     PRINT(",", 1),
-    MINUS("-", 2),
-    DIV("/", 2),
+    SUBTRACT("-", 2),
+    DIVIDE("/", 2),
     // 0-9 are digits
     TODO_4(":"),
     // ; is a separator
@@ -28,7 +28,7 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     // D is function definition
     TODO_8("E"),
     // F is filter
-    TODO_9("G"),
+    GENERATE("G", 2),
     TODO_10("H"),
     TODO_11("I"),
     TODO_12("J"),
@@ -39,7 +39,7 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     TODO_15("O"),
     TODO_16("P"),
     TODO_17("Q"),
-    TODO_18("R"),
+    EOR("R", 1),
     TODO_19("S"),
     TODO_20("T"),
     TODO_21("U"),
@@ -53,6 +53,7 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     TODO_29("]"),
     POWER("^", 2),
     TODO_30("_"),
+    LIST("`", -1),
     ANY("a", 1),
     TODO_31("b"),
     // c is a digraph char

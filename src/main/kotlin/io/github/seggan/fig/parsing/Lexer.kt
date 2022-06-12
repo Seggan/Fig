@@ -38,7 +38,6 @@ object Lexer {
                     ';' -> TokenType.SEPARATOR
                     '(' -> TokenType.LAMBDA
                     ')' -> TokenType.CLOSER
-                    '`' -> TokenType.LIST
                     '\'' -> TokenType.FUNCTION_REFERENCE
                     'D' -> TokenType.DEFINITION
                     else -> TokenType.OPERATOR
@@ -58,7 +57,6 @@ enum class TokenType {
     OPERATOR,
     SEPARATOR,
     CLOSER,
-    LIST,
     LAMBDA,
     FUNCTION_REFERENCE,
     DEFINITION

@@ -35,21 +35,35 @@ class Parser(tokens: List<Token>) {
 
     private fun parseOp(op: Operator): Node {
         val args = mutableListOf<Node>()
-        for (i in 0 until op.arity) {
-            if (!iterator.hasNext()) {
-                for (j in 0 until (op.arity - i)) {
-                    args.add(OpNode(Operator.INPUT))
-                }
-                break
-            } else {
+        val arity = op.arity
+        if (arity == -2) {
+            throw IllegalStateException("Operator $op has no arity")
+        }
+        if (arity == -1) {
+            while (iterator.hasNext()) {
                 val token = iterator.next()
                 if (token.type == TokenType.CLOSER) {
+                    break
+                }
+                args.add(parseToken(token))
+            }
+        } else {
+            for (i in 0 until op.arity) {
+                if (!iterator.hasNext()) {
                     for (j in 0 until (op.arity - i)) {
                         args.add(OpNode(Operator.INPUT))
                     }
                     break
                 } else {
-                    args.add(parseToken(token))
+                    val token = iterator.next()
+                    if (token.type == TokenType.CLOSER) {
+                        for (j in 0 until (op.arity - i)) {
+                            args.add(OpNode(Operator.INPUT))
+                        }
+                        break
+                    } else {
+                        args.add(parseToken(token))
+                    }
                 }
             }
         }
