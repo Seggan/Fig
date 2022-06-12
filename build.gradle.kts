@@ -6,7 +6,7 @@ plugins {
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
-group = "io.github.seggan.feg"
+group = "io.github.seggan.fig"
 version = "0.1.0"
 
 repositories {
@@ -14,7 +14,6 @@ repositories {
 }
 
 dependencies {
-    implementation("org.ow2.asm:asm:9.3")
     testImplementation(kotlin("test"))
 }
 
@@ -27,5 +26,5 @@ tasks.withType<KotlinCompile> {
 }
 
 application {
-    mainClass.set("io.github.seggan.feg.MainKt")
+    mainClass.set("io.github.seggan.fig.MainKt")
 }

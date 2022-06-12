@@ -1,27 +1,31 @@
-package io.github.seggan.feg.compiler
+package io.github.seggan.fig.interp
 
-enum class Operator(val symbol: String) {
-    NOT("!"),
+enum class Operator(val symbol: String, val arity: Int = -2) {
+    // tab newline and space are no-ops
+    NOT("!", 1),
+    // " is strings
     TODO_1("#"),
     TODO_2("$"),
-    MOD("%"),
-    AND("&"),
-    TODO_3("'"),
-    MUL("*"),
-    PLUS("+"),
-    PRINT(","),
-    MINUS("-"),
-    DIV("/"),
+    MOD("%", 2),
+    AND("&", 2),
+    // ' is function ref
+    MUL("*", 2),
+    PLUS("+", 2),
+    PRINT(",", 1),
+    MINUS("-", 2),
+    DIV("/", 2),
+    // 0-9 are digits
     TODO_4(":"),
-    LESS_THAN("<"),
-    EQUAL("="),
-    GREATER_THAN(">"),
-    INPUT("?"),
+    // ; is a separator
+    LESS_THAN("<", 2),
+    EQUAL("=", 2),
+    GREATER_THAN(">", 2),
+    INPUT("?", 0),
     TODO_5("@"),
-    ALL("A"),
+    ALL("A", 1),
     TODO_6("B"),
-    CHR_ORD("C"),
-    TODO_7("D"),
+    CHR_ORD("C", 1),
+    // D is function definition
     TODO_8("E"),
     // F is filter
     TODO_9("G"),
@@ -29,7 +33,7 @@ enum class Operator(val symbol: String) {
     TODO_11("I"),
     TODO_12("J"),
     TODO_13("K"),
-    LENGTH("L"),
+    LENGTH("L", 1),
     // M is map
     TODO_14("N"),
     TODO_15("O"),
@@ -47,9 +51,9 @@ enum class Operator(val symbol: String) {
     TODO_27("["),
     TODO_28("\\"),
     TODO_29("]"),
-    POWER("^"),
+    POWER("^", 2),
     TODO_30("_"),
-    ANY("a"),
+    ANY("a", 1),
     TODO_31("b"),
     // c is a digraph char
     TODO_32("d"),
@@ -76,7 +80,7 @@ enum class Operator(val symbol: String) {
     TODO_51("y"),
     TODO_52("z"),
     TODO_53("{"),
-    OR("|"),
+    OR("|", 2),
     TODO_54("}"),
     TODO_55("~")
 }

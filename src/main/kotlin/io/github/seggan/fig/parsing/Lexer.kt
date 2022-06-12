@@ -1,4 +1,4 @@
-package io.github.seggan.feg.parsing
+package io.github.seggan.fig.parsing
 
 object Lexer {
     fun lex(input: String): List<Token> {
@@ -39,6 +39,8 @@ object Lexer {
                     '(' -> TokenType.LAMBDA
                     ')' -> TokenType.CLOSER
                     '`' -> TokenType.LIST
+                    '\'' -> TokenType.FUNCTION_REFERENCE
+                    'D' -> TokenType.DEFINITION
                     else -> TokenType.OPERATOR
                 }
                 tokens.add(Token(type, c.toString() + (if (c in "cmr") input[i++] else "")))
@@ -57,5 +59,7 @@ enum class TokenType {
     SEPARATOR,
     CLOSER,
     LIST,
-    LAMBDA
+    LAMBDA,
+    FUNCTION_REFERENCE,
+    DEFINITION
 }
