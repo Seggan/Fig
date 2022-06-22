@@ -33,6 +33,8 @@ object Lexer {
                     }
                 }
                 tokens.add(Token(TokenType.NUMBER, result.toString()))
+            } else if (c == '\\') {
+                tokens.add(Token(TokenType.STRING, input[i++].toString()))
             } else {
                 val type = when (c) {
                     ';' -> TokenType.SEPARATOR
@@ -42,7 +44,7 @@ object Lexer {
                     'D' -> TokenType.DEFINITION
                     else -> TokenType.OPERATOR
                 }
-                tokens.add(Token(type, c.toString() + (if (c in "cmr") input[i++] else "")))
+                tokens.add(Token(type, c.toString() + (if (c in "cm#") input[i++] else "")))
             }
         }
         return tokens

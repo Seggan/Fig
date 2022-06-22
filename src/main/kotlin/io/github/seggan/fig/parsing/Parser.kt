@@ -1,6 +1,8 @@
 package io.github.seggan.fig.parsing
 
+import io.github.seggan.fig.interp.CONSTANTS
 import io.github.seggan.fig.interp.Operator
+import io.github.seggan.fig.interp.runtime.CallableFunction
 
 class Parser(tokens: List<Token>) {
 
@@ -17,14 +19,22 @@ class Parser(tokens: List<Token>) {
 
     private fun parseToken(token: Token): Node {
         return when (token.type) {
-            TokenType.STRING -> StringNode(token.value)
-            TokenType.NUMBER -> NumberNode(token.value.toDouble())
+            TokenType.STRING -> ConstantNode(token.value)
+            TokenType.NUMBER -> ConstantNode(token.value.toBigDecimal())
+            TokenType.FUNCTION_REFERENCE -> ConstantNode(CallableFunction(parseToken(iterator.next()))) { "'$it" }
             TokenType.OPERATOR -> {
                 var operator: Operator? = null
                 for (op in Operator.values()) {
                     if (op.symbol == token.value) {
                         operator = op
                         break
+                    }
+                }
+                if (operator == null) {
+                    for ((op, v) in CONSTANTS.entries) {
+                        if (op == token.value) {
+                            return ConstantNode(v)
+                        }
                     }
                 }
                 parseOp(operator ?: throw IllegalArgumentException("Unknown operator: ${token.value}"))

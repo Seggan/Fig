@@ -18,5 +18,5 @@ fun main(args: Array<String>) {
     val parser = Parser(lexed)
     val ast = parser.parse()
     println(ast)
-    Interpreter.interpret(ast)
+    Interpreter.interpret(ast, args.toList())
 }

@@ -1,30 +1,32 @@
 package io.github.seggan.fig.interp
 
+import io.github.seggan.fig.interp.runtime.InputSource
+import io.github.seggan.fig.interp.runtime.figPrint
 import io.github.seggan.fig.parsing.Node
 import io.github.seggan.fig.parsing.OpNode
 import java.lang.invoke.MethodHandle
 import java.lang.invoke.MethodHandles
 import java.lang.invoke.MethodType
+import java.math.BigDecimal
 
 object Interpreter {
 
-    private lateinit var value: Any
+    lateinit var value: Any
+    lateinit var inputSource: InputSource
 
-    fun interpret(ast: List<Node>) {
+    fun interpret(ast: List<Node>, input: List<String>) {
+        inputSource = InputSource(input)
+        value = BigDecimal.ZERO
         visit(ast)
-        println(value)
+        figPrint(value)
     }
 
-    private fun visit(node: Node) {
+    fun visit(node: Node) {
         node.accept(this)
     }
 
     private fun visit(nodes: List<Node>) {
         nodes.forEach { visit(it) }
-    }
-
-    fun visitString(str: String) {
-        value = str
     }
 
     fun visitOp(node: OpNode) {
@@ -36,15 +38,15 @@ object Interpreter {
         value = execute(node.operator, ops)
     }
 
-    fun visitNumber(num: Double) {
-        value = num
+    fun visitConstant(obj: Any) {
+        value = obj
     }
 }
 
 private val handleCache = mutableMapOf<Operator, MethodHandle>()
 
 private val lookup = MethodHandles.lookup()
-private val clazz = Class.forName("io.github.seggan.fig.interp.RuntimeStuffKt")
+private val clazz = Class.forName("io.github.seggan.fig.interp.runtime.RuntimeStuffKt")
 
 private fun execute(op: Operator, operands: List<Any>): Any {
     val handle = handleCache.getOrPut(op) {

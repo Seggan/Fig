@@ -2,9 +2,9 @@ package io.github.seggan.fig.interp
 
 enum class Operator(val symbol: String, val arity: Int = -2) {
     // tab newline and space are no-ops
-    NOT("!", 1),
+    BREAK("!", 1),
     // " is strings
-    TODO_1("#"),
+    // # is misc digraph char
     TODO_2("$"),
     MOD("%", 2),
     AND("&", 2),
@@ -15,8 +15,8 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     SUBTRACT("-", 2),
     DIVIDE("/", 2),
     // 0-9 are digits
-    TODO_4(":"),
-    // ; is a separator
+    PAIR(":", 1),
+    TODO_56(";"),
     LESS_THAN("<", 2),
     EQUAL("=", 2),
     GREATER_THAN(">", 2),
@@ -27,19 +27,19 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     CHR_ORD("C", 1),
     // D is function definition
     TODO_8("E"),
-    // F is filter
+    FILTER("F", 2),
     GENERATE("G", 2),
     TODO_10("H"),
     TODO_11("I"),
     TODO_12("J"),
     TODO_13("K"),
     LENGTH("L", 1),
-    // M is map
+    MAP("M", 2),
     TODO_14("N"),
     TODO_15("O"),
     TODO_16("P"),
     TODO_17("Q"),
-    EOR("R", 1),
+    REDUCE("R", 1),
     TODO_19("S"),
     TODO_20("T"),
     TODO_21("U"),
@@ -71,7 +71,7 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     TODO_42("o"),
     TODO_43("p"),
     TODO_44("q"),
-    // r is a digraph char
+    EOR("r", 1),
     TODO_45("s"),
     TODO_46("t"),
     TODO_47("u"),
@@ -85,3 +85,7 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     TODO_54("}"),
     TODO_55("~")
 }
+
+val CONSTANTS = buildMap<String, Any> {
+    put("cH", "Hello, World!")
+}.toMap()

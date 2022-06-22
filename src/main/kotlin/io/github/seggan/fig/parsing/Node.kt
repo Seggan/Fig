@@ -2,20 +2,18 @@ package io.github.seggan.fig.parsing
 
 import io.github.seggan.fig.interp.Interpreter
 import io.github.seggan.fig.interp.Operator
+import io.github.seggan.fig.interp.runtime.CallableFunction
+import java.math.BigDecimal
 
 sealed class Node {
     abstract override fun toString(): String
     abstract fun accept(visitor: Interpreter)
 }
 
-class StringNode(val value: String) : Node() {
-    override fun toString(): String = "($value)"
-    override fun accept(visitor: Interpreter) = visitor.visitString(value)
-}
+class ConstantNode(private val obj: Any, private val stringify: (Any) -> String = { "($it)" }) : Node() {
+    override fun toString(): String = stringify(obj)
 
-class NumberNode(val value: Double) : Node() {
-    override fun toString(): String = "($value)"
-    override fun accept(visitor: Interpreter) = visitor.visitNumber(value)
+    override fun accept(visitor: Interpreter) = visitor.visitConstant(obj)
 }
 
 class OpNode(val operator: Operator, vararg val input: Node) : Node() {
