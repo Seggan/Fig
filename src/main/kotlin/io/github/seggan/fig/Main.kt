@@ -5,7 +5,7 @@ import io.github.seggan.fig.parsing.Lexer
 import io.github.seggan.fig.parsing.Parser
 import java.io.File
 
-const val CODEPAGE = "\t\n !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+const val CODEPAGE = "\n !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 
 fun main(args: Array<String>) {
     if (args.size != 1) {
