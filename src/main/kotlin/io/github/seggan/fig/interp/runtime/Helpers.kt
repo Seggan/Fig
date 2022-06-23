@@ -1,6 +1,7 @@
 package io.github.seggan.fig.interp.runtime
 
 import java.math.BigDecimal
+import java.math.BigInteger
 
 fun figPrint(obj: Any, end: String? = "\n") {
     when (obj) {
@@ -21,22 +22,24 @@ fun figPrint(obj: Any, end: String? = "\n") {
     if (end != null) print(end)
 }
 
-fun baseEncode(n: Int, base: Int): List<Int> {
+fun baseEncode(n: BigInteger, base: Int): List<Int> {
     val ret = mutableListOf<Int>()
+    val b = base.toBigInteger()
     var i = n
-    while (i > 0) {
-        i -= 1
-        ret.add(i % base)
-        i /= base
+    while (i > BigInteger.ZERO) {
+        i -= BigInteger.ONE
+        ret.add((i % b).toInt())
+        i /= b
     }
     return ret.reversed()
 }
 
-fun baseDecode(a: List<Int>, base: Int): Int {
-    var n = 0
+fun baseDecode(a: List<Int>, base: Int): BigInteger {
+    val b = base.toBigInteger()
+    var n = BigInteger.ZERO
     for (i in a) {
-        n *= base
-        n += i + 1
+        n *= b
+        n += (i + 1).toBigInteger()
     }
     return n
 }
@@ -44,8 +47,8 @@ fun baseDecode(a: List<Int>, base: Int): Int {
 fun decompress(str: String, codepage: String, cpage: String, dict: List<String>): String {
     val res = mutableListOf<String>()
     var num = baseDecode(str.map(codepage::indexOf), codepage.length)
-    while (num > 0) {
-
+    while (num > BigInteger.ZERO) {
+        
     }
     return res.reversed().joinToString("")
 }
