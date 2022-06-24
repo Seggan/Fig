@@ -1,5 +1,10 @@
+@file:Suppress("unused")
+
 package io.github.seggan.fig.interp.runtime
 
+import io.github.seggan.fig.COMPRESSABLE_CHARS
+import io.github.seggan.fig.COMPRESSION_CODEPAGE
+import io.github.seggan.fig.DICTIONARY
 import io.github.seggan.fig.interp.Interpreter
 import java.math.BigDecimal
 
@@ -9,6 +14,12 @@ fun add(a: Any, b: Any): Any {
     } else {
         a.toString() + b.toString()
     }
+}
+
+fun compress(obj: Any): Any {
+    val s = obj.toString()
+    val compressed = compress(s, COMPRESSION_CODEPAGE, COMPRESSABLE_CHARS, DICTIONARY)
+    return if (compressed.length < s.length) "@$compressed\"" else "\"$s\""
 }
 
 fun eor(obj: Any): Any {

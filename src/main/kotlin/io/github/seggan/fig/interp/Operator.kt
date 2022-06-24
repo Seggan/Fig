@@ -2,7 +2,7 @@ package io.github.seggan.fig.interp
 
 enum class Operator(val symbol: String, val arity: Int = -2) {
     // tab newline and space are no-ops
-    BREAK("!", 1),
+    INPUT("!", 0),
     // " is strings
     // # is misc digraph char
     TODO_2("$"),
@@ -20,8 +20,9 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     LESS_THAN("<", 2),
     EQUAL("=", 2),
     GREATER_THAN(">", 2),
-    INPUT("?", 0),
-    TODO_5("@"),
+    IF("?", 3),
+    // @ is compressed string
+    COMPRESS("#@", 1),
     ALL("A", 1),
     TODO_6("B"),
     CHR_ORD("C", 1),

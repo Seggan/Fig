@@ -1,5 +1,10 @@
 package io.github.seggan.fig.parsing
 
+import io.github.seggan.fig.COMPRESSABLE_CHARS
+import io.github.seggan.fig.COMPRESSION_CODEPAGE
+import io.github.seggan.fig.DICTIONARY
+import io.github.seggan.fig.interp.runtime.decompress
+
 object Lexer {
     fun lex(input: String): List<Token> {
         val tokens = mutableListOf<Token>()
@@ -14,12 +19,41 @@ object Lexer {
                         val char = input[i++]
                         if (char == '"') {
                             break
+                        } else if (char == '\\') {
+                            when (val nextChar = input[i++]) {
+                                'n' -> append('\n')
+                                'r' -> append('\r')
+                                't' -> append('\t')
+                                '\\' -> append('\\')
+                                '"' -> append('"')
+                                'u' -> {
+                                    val hex = input.substring(i, i + 4)
+                                    val codePoint = hex.toInt(16)
+                                    append(codePoint.toChar())
+                                    i += 4
+                                }
+                                else -> throw IllegalArgumentException("Invalid escape sequence: \\$nextChar")
+                            }
                         } else {
                             append(char)
                         }
                     }
                 }
                 tokens.add(Token(TokenType.STRING, result))
+            } else if (c == '\\') {
+                tokens.add(Token(TokenType.STRING, input[i++].toString()))
+            } else if (c == '@') {
+                val result = buildString {
+                    while (i < input.length) {
+                        val char = input[i++]
+                        if (char == '"') {
+                            break
+                        } else {
+                            append(char)
+                        }
+                    }
+                }
+                tokens.add(Token(TokenType.STRING, decompress(result, COMPRESSION_CODEPAGE, COMPRESSABLE_CHARS, DICTIONARY)))
             } else if (c.code in 48..57) {
                 val result = StringBuilder()
                 result.append(c)
@@ -37,7 +71,6 @@ object Lexer {
                 tokens.add(Token(TokenType.STRING, input[i++].toString()))
             } else {
                 val type = when (c) {
-                    ';' -> TokenType.SEPARATOR
                     '(' -> TokenType.LAMBDA
                     ')' -> TokenType.CLOSER
                     '\'' -> TokenType.FUNCTION_REFERENCE
@@ -57,7 +90,6 @@ enum class TokenType {
     STRING,
     NUMBER,
     OPERATOR,
-    SEPARATOR,
     CLOSER,
     LAMBDA,
     FUNCTION_REFERENCE,
