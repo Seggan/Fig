@@ -3,25 +3,6 @@ package io.github.seggan.fig.interp.runtime
 import java.math.BigDecimal
 import java.math.BigInteger
 
-fun figPrint(obj: Any, end: String? = "\n") {
-    when (obj) {
-        is BigDecimal -> print(obj.stripTrailingZeros().toPlainString())
-        is LazyList -> {
-            print('[')
-            val it = obj.iterator()
-            while (it.hasNext()) {
-                figPrint(it.next(), null)
-                if (it.hasNext()) {
-                    print(", ")
-                }
-            }
-            print(']')
-        }
-        else -> print(obj)
-    }
-    if (end != null) print(end)
-}
-
 fun baseEncode(n: BigInteger, base: Int): List<Int> {
     val ret = mutableListOf<Int>()
     val b = base.toBigInteger()
@@ -42,35 +23,6 @@ fun baseDecode(a: List<Int>, base: Int): BigInteger {
         n += (i + 1).toBigInteger()
     }
     return n
-}
-
-fun decompress(str: String, codepage: String, cpage: String, dict: List<String>): String {
-    val res = mutableListOf<String>()
-    var num = baseDecode(str.map(codepage::indexOf), codepage.length)
-    while (num > BigInteger.ZERO) {
-        val tag = num % 8
-        num /= 8
-        if (tag and 0b100 == 0) {
-            var c = cpage[num % cpage.length]
-            num /= cpage.length
-            if (tag and 0b001 > 0) {
-                c = c.uppercaseChar()
-            }
-            res.add(c.toString())
-        } else {
-            val idx = num % dict.size
-            num /= dict.size
-            var word = dict[idx]
-            if (tag and 0b001 > 0) {
-                word = word[0].uppercaseChar() + word.substring(1)
-            }
-            res.add(word)
-        }
-        if (tag and 0b010 > 0) {
-            res.add(" ")
-        }
-    }
-    return res.reversed().joinToString("")
 }
 
 fun compress(str: String, codepage: String, cpage: String, dict: List<String>): String {
@@ -108,6 +60,62 @@ fun compress(str: String, codepage: String, cpage: String, dict: List<String>): 
         num += tag
     }
     return baseEncode(num, codepage.length).map(codepage::get).joinToString("")
+}
+
+fun decompress(str: String, codepage: String, cpage: String, dict: List<String>): String {
+    val res = mutableListOf<String>()
+    var num = baseDecode(str.map(codepage::indexOf), codepage.length)
+    while (num > BigInteger.ZERO) {
+        val tag = num % 8
+        num /= 8
+        if (tag and 0b100 == 0) {
+            var c = cpage[num % cpage.length]
+            num /= cpage.length
+            if (tag and 0b001 > 0) {
+                c = c.uppercaseChar()
+            }
+            res.add(c.toString())
+        } else {
+            val idx = num % dict.size
+            num /= dict.size
+            var word = dict[idx]
+            if (tag and 0b001 > 0) {
+                word = word[0].uppercaseChar() + word.substring(1)
+            }
+            res.add(word)
+        }
+        if (tag and 0b010 > 0) {
+            res.add(" ")
+        }
+    }
+    return res.reversed().joinToString("")
+}
+
+fun figPrint(obj: Any, end: String? = "\n") {
+    when (obj) {
+        is BigDecimal -> print(obj.stripTrailingZeros().toPlainString())
+        is LazyList -> {
+            print('[')
+            val it = obj.iterator()
+            while (it.hasNext()) {
+                figPrint(it.next(), null)
+                if (it.hasNext()) {
+                    print(", ")
+                }
+            }
+            print(']')
+        }
+        else -> print(obj)
+    }
+    if (end != null) print(end)
+}
+
+fun listify(obj: Any): LazyList {
+    return when (obj) {
+        is LazyList -> obj
+        is BigDecimal -> obj.stripTrailingZeros().toPlainString().map { it - '0' }.lazy()
+        else -> obj.toString().map(Char::toString).lazy()
+    }
 }
 
 private fun Boolean.toInt(): Int = if (this) 1 else 0

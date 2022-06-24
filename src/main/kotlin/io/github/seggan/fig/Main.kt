@@ -11,8 +11,8 @@ const val COMPRESSABLE_CHARS = "abcdefghijklmnopqrstuvwxyz\n0123456789'()*+,-. !
 val DICTIONARY = object {}.javaClass.getResource("/dict.txt")!!.readText().split("\n")
 
 fun main(args: Array<String>) {
-    if (args.size != 1) {
-        println("Usage: java -jar Feg.jar <file>")
+    if (args.size < 1) {
+        println("Usage: java -jar Fig.jar <file> [args]")
         return
     }
     val code = File(args[0]).readText()
@@ -21,5 +21,5 @@ fun main(args: Array<String>) {
     val parser = Parser(lexed)
     val ast = parser.parse()
     println(ast)
-    Interpreter.interpret(ast, args.toList())
+    Interpreter.interpret(ast, args.drop(1).toList())
 }

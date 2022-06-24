@@ -14,7 +14,7 @@ class LazyList(private val generator: Iterator<Any>) : AbstractCollection<Any>()
         return backing.isEmpty() && !generator.hasNext()
     }
 
-    fun get(index: Int): Any {
+    operator fun get(index: Int): Any {
         fill(index)
         return backing[index]
     }
@@ -56,3 +56,7 @@ class LazyList(private val generator: Iterator<Any>) : AbstractCollection<Any>()
         }
     }
 }
+
+fun Iterable<Any>.lazy(): LazyList = LazyList(this.iterator())
+fun Sequence<Any>.lazy(): LazyList = LazyList(this.iterator())
+fun Iterator<Any>.lazy(): LazyList = LazyList(this)

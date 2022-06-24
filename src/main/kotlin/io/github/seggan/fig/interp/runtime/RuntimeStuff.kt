@@ -24,37 +24,69 @@ fun compress(obj: Any): Any {
 
 fun eor(obj: Any): Any {
     if (obj is BigDecimal) {
-        return LazyList(object : Iterator<Any> {
+        return object : Iterator<Any> {
             private var i = BigDecimal.ONE.negate()
             override fun hasNext(): Boolean = i < obj
             override fun next(): Any {
                 i += BigDecimal.ONE
                 return i
             }
-        })
+        }.lazy()
     }
     throw IllegalArgumentException("Illegal value $obj")
 }
 
 fun generate(a: Any, b: Any): Any {
-    val pass = (a as LazyList).reversed().take((b as CallableFunction).arity).toMutableList()
-    return LazyList(sequence {
-        yieldAll(a)
-        while (true) {
-            val next = b.call(pass)
-            pass.add(next)
-            if (pass.size > b.arity) {
-                pass.removeAt(0)
+    if (b is CallableFunction) {
+        val list = if (a is LazyList) a else listOf(a)
+        val pass = list.reversed().take(b.arity).toMutableList()
+        return sequence {
+            yieldAll(list)
+            while (true) {
+                val next = b.call(pass)
+                pass.add(next)
+                if (pass.size > b.arity) {
+                    pass.removeAt(0)
+                }
+                yield(next)
             }
-            yield(next)
+        }.lazy()
+    } else {
+        return figCmp(a, b)
+    }
+}
+
+fun index(a: Any, b: Any): Any = listify(a)[(b as BigDecimal).toInt()]
+
+fun input(): Any = Interpreter.inputSource.getInput()
+
+fun pair(obj: Any): Any = listOf(obj, obj).lazy()
+
+fun programInput(): Any = Interpreter.programInput.getInput()
+
+private fun figCmp(a: Any, b: Any): Int {
+    return if (a is BigDecimal && b is BigDecimal) {
+        a.compareTo(b)
+    } else if (a is LazyList && b is LazyList) {
+        val aIt = a.iterator()
+        val bIt = b.iterator()
+        var cmp: Int
+        while (true) {
+            if (!aIt.hasNext()) {
+                return if (bIt.hasNext()) -1 else 0
+            }
+            if (!bIt.hasNext()) {
+                return if (aIt.hasNext()) 1 else 0
+            }
+            val aNext = aIt.next()
+            val bNext = bIt.next()
+            cmp = figCmp(aNext, bNext)
+            if (cmp != 0) {
+                break
+            }
         }
-    })
-}
-
-fun input(): Any {
-    return Interpreter.inputSource.getInput()
-}
-
-fun pair(obj: Any): Any {
-    return LazyList(listOf(obj, obj))
+        cmp
+    } else {
+        a.toString().compareTo(b.toString())
+    }
 }

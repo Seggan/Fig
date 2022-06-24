@@ -3,6 +3,7 @@ package io.github.seggan.fig.interp
 enum class Operator(val symbol: String, val arity: Int = -2) {
     // tab newline and space are no-ops
     INPUT("!", 0),
+    PROGRAM_INPUT("#!", 0),
     // " is strings
     // # is misc digraph char
     TODO_2("$"),
@@ -63,7 +64,7 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     TODO_34("f"),
     TODO_35("g"),
     TODO_36("h"),
-    TODO_37("i"),
+    INDEX("i", 2),
     TODO_38("j"),
     TODO_39("k"),
     TODO_40("l"),
@@ -72,7 +73,7 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     TODO_42("o"),
     TODO_43("p"),
     TODO_44("q"),
-    EOR("r", 1),
+    EZR("r", 1),
     TODO_45("s"),
     TODO_46("t"),
     TODO_47("u"),
