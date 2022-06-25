@@ -44,7 +44,7 @@ fun main(args: Array<String>) {
         result.appendLine("```")
         result.appendLine(code)
         result.appendLine("```")
-        result.appendLine("(See the README to see how to run this)[https://github.com/Seggan/Fig/blob/master/README.md]")
+        result.appendLine("[See the README to see how to run this](https://github.com/Seggan/Fig/blob/master/README.md)")
         val string = result.toString()
         Toolkit.getDefaultToolkit().systemClipboard.setContents(
             StringSelection(string),
