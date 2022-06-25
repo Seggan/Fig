@@ -71,7 +71,7 @@ object Lexer {
                 tokens.add(Token(TokenType.STRING, input[i++].toString()))
             } else {
                 val type = when (c) {
-                    '(' -> TokenType.LAMBDA
+                    '(' -> TokenType.LOOP
                     ')' -> TokenType.CLOSER
                     '\'' -> TokenType.FUNCTION_REFERENCE
                     'D' -> TokenType.DEFINITION
@@ -91,7 +91,7 @@ enum class TokenType {
     NUMBER,
     OPERATOR,
     CLOSER,
-    LAMBDA,
+    LOOP,
     FUNCTION_REFERENCE,
     DEFINITION
 }

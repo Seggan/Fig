@@ -43,6 +43,12 @@ object Interpreter {
     fun visitConstant(obj: Any) {
         value = obj
     }
+
+    fun visitLoop(body: List<Node>) {
+        while (true) {
+            visit(body)
+        }
+    }
 }
 
 private val handleCache = mutableMapOf<Operator, MethodHandle>()

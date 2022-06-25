@@ -56,11 +56,24 @@ fun generate(a: Any, b: Any): Any {
     }
 }
 
-fun index(a: Any, b: Any): Any = listify(a)[(b as BigDecimal).toInt()]
+fun index(a: Any, b: Any): Any {
+    return if (a is BigDecimal) {
+        listify(b)[a.toInt()]
+    } else {
+        listify(a)[(b as BigDecimal).toInt()]
+    }
+}
 
 fun input(): Any = Interpreter.inputSource.getInput()
 
+fun lastReturnValue(): Any = Interpreter.value
+
 fun pair(obj: Any): Any = listOf(obj, obj).lazy()
+
+fun println(obj: Any): Any {
+    figPrint(obj)
+    return obj
+}
 
 fun programInput(): Any = Interpreter.programInput.getInput()
 

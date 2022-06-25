@@ -14,7 +14,12 @@ repositories {
 }
 
 dependencies {
+    implementation("ch.obermuhlner:big-math:2.3.0")
     testImplementation(kotlin("test"))
+}
+
+tasks.shadowJar {
+    archiveFileName.set("Fig-${project.version}.jar")
 }
 
 tasks.test {

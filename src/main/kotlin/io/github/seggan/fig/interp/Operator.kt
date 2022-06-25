@@ -12,7 +12,7 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     // ' is function ref
     MULTIPLY("*", 2),
     ADD("+", 2),
-    PRINT(",", 1),
+    PRINTLN(",", 1),
     SUBTRACT("-", 2),
     DIVIDE("/", 2),
     // 0-9 are digits
@@ -40,8 +40,8 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     TODO_14("N"),
     TODO_15("O"),
     TODO_16("P"),
-    TODO_17("Q"),
-    REDUCE("R", 1),
+    LAST_RETURN_VALUE("Q", 0),
+    REDUCE("R"),
     TODO_19("S"),
     TODO_20("T"),
     TODO_21("U"),

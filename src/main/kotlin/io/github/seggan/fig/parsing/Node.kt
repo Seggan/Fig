@@ -28,3 +28,8 @@ class OpNode(val operator: Operator, vararg val input: Node) : Node() {
 
     override fun accept(visitor: Interpreter) = visitor.visitOp(this)
 }
+
+class LoopNode(private val body: List<Node>) : Node() {
+    override fun toString(): String = "({${body.joinToString(" ")}})"
+    override fun accept(visitor: Interpreter) = visitor.visitLoop(body)
+}

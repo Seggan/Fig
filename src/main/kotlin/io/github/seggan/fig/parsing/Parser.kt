@@ -22,6 +22,18 @@ class Parser(tokens: List<Token>) {
             TokenType.STRING -> ConstantNode(token.value)
             TokenType.NUMBER -> ConstantNode(token.value.toBigDecimal())
             TokenType.FUNCTION_REFERENCE -> ConstantNode(CallableFunction(parseToken(iterator.next()))) { "'$it" }
+            TokenType.LOOP -> {
+                val body = mutableListOf<Node>()
+                while (iterator.hasNext()) {
+                    val next = iterator.next()
+                    if (next.type == TokenType.CLOSER) {
+                        break
+                    } else {
+                        body.add(parseToken(next))
+                    }
+                }
+                LoopNode(body)
+            }
             TokenType.OPERATOR -> {
                 var operator: Operator? = null
                 for (op in Operator.values()) {
@@ -79,5 +91,4 @@ class Parser(tokens: List<Token>) {
         }
         return OpNode(op, *args.toTypedArray())
     }
-
 }
