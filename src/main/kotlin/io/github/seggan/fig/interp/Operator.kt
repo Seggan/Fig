@@ -17,7 +17,7 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     DIVIDE("/", 2),
     // 0-9 are digits
     PAIR(":", 1),
-    TODO_56(";"),
+    PRINT_NO_NL(";", 1),
     LESS_THAN("<", 2),
     EQUAL("=", 2),
     GREATER_THAN(">", 2),

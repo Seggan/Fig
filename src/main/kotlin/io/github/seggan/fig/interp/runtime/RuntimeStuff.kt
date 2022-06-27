@@ -23,17 +23,36 @@ fun compress(obj: Any): Any {
 }
 
 fun eor(obj: Any): Any {
-    if (obj is BigDecimal) {
-        return object : Iterator<Any> {
-            private var i = BigDecimal.ONE.negate()
-            override fun hasNext(): Boolean = i < obj
-            override fun next(): Any {
-                i += BigDecimal.ONE
-                return i
+    when (obj) {
+        is BigDecimal -> {
+            return object : Iterator<Any> {
+                private var i = BigDecimal.ONE.negate()
+                override fun hasNext(): Boolean = i < obj
+                override fun next(): Any {
+                    i += BigDecimal.ONE
+                    return i
+                }
+            }.lazy()
+        }
+        is LazyList -> {
+            if (obj.isEmpty()) {
+                return obj
             }
-        }.lazy()
+            return object : Iterator<Any> {
+                private var it = obj.iterator()
+                override fun hasNext(): Boolean = true
+                override fun next(): Any {
+                    if (!it.hasNext()) {
+                        it = obj.iterator()
+                    }
+                    return it.next()
+                }
+            }.lazy()
+        }
+        else -> {
+            throw IllegalArgumentException("Cannot eor $obj")
+        }
     }
-    throw IllegalArgumentException("Illegal value $obj")
 }
 
 fun generate(a: Any, b: Any): Any {
@@ -69,6 +88,11 @@ fun input(): Any = Interpreter.inputSource.getInput()
 fun lastReturnValue(): Any = Interpreter.value
 
 fun pair(obj: Any): Any = listOf(obj, obj).lazy()
+
+fun printNoNl(obj: Any): Any {
+    figPrint(obj, null)
+    return obj
+}
 
 fun println(obj: Any): Any {
     figPrint(obj)
