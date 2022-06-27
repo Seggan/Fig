@@ -11,14 +11,13 @@ import java.math.BigDecimal
 
 object Interpreter {
 
-    lateinit var value: Any
+    var value: Any = BigDecimal.ZERO
     lateinit var inputSource: InputSource
     lateinit var programInput: InputSource
 
     fun interpret(ast: List<Node>, input: List<String>) {
         inputSource = InputSource(input)
         programInput = inputSource
-        value = BigDecimal.ZERO
         visit(ast)
         figPrint(value)
     }

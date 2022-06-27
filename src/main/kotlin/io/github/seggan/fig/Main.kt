@@ -1,6 +1,8 @@
 package io.github.seggan.fig
 
 import io.github.seggan.fig.interp.Interpreter
+import io.github.seggan.fig.interp.runtime.baseDecode
+import io.github.seggan.fig.interp.runtime.baseEncode
 import io.github.seggan.fig.parsing.Lexer
 import io.github.seggan.fig.parsing.Parser
 import java.awt.Toolkit
@@ -18,48 +20,64 @@ const val COMPRESSABLE_CHARS = "abcdefghijklmnopqrstuvwxyz\n0123456789'()*+,-. !
 val DICTIONARY = object {}.javaClass.getResource("/dict.txt")!!.readText().split("\n")
 
 fun main(args: Array<String>) {
-    if (args.isEmpty()) {
-        println("Usage: java -jar Fig.jar <file> [args]")
+    if (args.size < 2) {
+        println("Usage: java -jar Fig.jar <command> <file> [args]")
         return
     }
-    val file = args[0]
-    if (file == "format" && args.size == 2) {
-        val code = args[1]
-        val result = StringBuilder("# [Fig](https://github.com/Seggan/Fig), ")
-        if (code.any { it !in CODEPAGE }) {
-            result.append(code.length)
-        } else {
-            result.append("\\$")
-            result.append(code.length)
-            result.append("\\log_{256}(")
-            result.append(CODEPAGE.length)
-            result.append(")\\approx\\$ ")
-            val log = BDM.log(CODEPAGE.length.toBigDecimal(), MathContext.DECIMAL128) / BDM.log(
-                256.toBigDecimal(),
-                MathContext.DECIMAL128
-            )
-            result.append((log * code.length.toBigDecimal()).setScale(3, RoundingMode.HALF_UP).toPlainString())
+    when (args[0]) {
+        "executeUTF8" -> {
+            val code = File(args[1]).readText()
+            val lexed = Lexer.lex(code)
+            val parser = Parser(lexed)
+            val ast = parser.parse()
+            Interpreter.interpret(ast, args.drop(2).toList())
         }
-        result.appendLine(" bytes")
-        result.appendLine("```")
-        result.appendLine(code)
-        result.appendLine("```")
-        result.appendLine("[See the README to see how to run this](https://github.com/Seggan/Fig/blob/master/README.md)")
-        val string = result.toString()
-        Toolkit.getDefaultToolkit().systemClipboard.setContents(
-            StringSelection(string),
-            null
-        )
-        // already has a newline at the end
-        print(string)
-        println("Copied to clipboard")
-        return
+        "execute" -> {
+            val code = readSource(File(args[1]).readBytes())
+            val lexed = Lexer.lex(code)
+            val parser = Parser(lexed)
+            val ast = parser.parse()
+            Interpreter.interpret(ast, args.drop(2).toList())
+        }
+        "format" -> {
+            val code = File(args[1]).readText()
+            val result = StringBuilder("# [Fig](https://github.com/Seggan/Fig), ")
+            if (code.any { it !in CODEPAGE }) {
+                result.append(code.length)
+            } else {
+                result.append("\\$")
+                result.append(code.length)
+                result.append("\\log_{256}(")
+                result.append(CODEPAGE.length)
+                result.append(")\\approx\\$ ")
+                val log = BDM.log(CODEPAGE.length.toBigDecimal(), MathContext.DECIMAL128) / BDM.log(
+                    256.toBigDecimal(),
+                    MathContext.DECIMAL128
+                )
+                result.append((log * code.length.toBigDecimal()).setScale(3, RoundingMode.HALF_UP).toPlainString())
+            }
+            result.appendLine(" bytes")
+            result.appendLine("```")
+            result.appendLine(code)
+            result.appendLine("```")
+            result.appendLine("[See the README to see how to run this](https://github.com/Seggan/Fig/blob/master/README.md)")
+            val string = result.toString()
+            Toolkit.getDefaultToolkit().systemClipboard.setContents(
+                StringSelection(string),
+                null
+            )
+            // already has a newline at the end
+            print(string)
+            println("Copied to clipboard")
+        }
+        else -> {
+            println("Unknown command: ${args[0]}")
+        }
     }
-    val code = File(file).readText()
-    val lexed = Lexer.lex(code)
-    println(lexed)
-    val parser = Parser(lexed)
-    val ast = parser.parse()
-    println(ast)
-    Interpreter.interpret(ast, args.drop(1).toList())
+}
+
+fun readSource(source: ByteArray): String {
+    val b10 = baseDecode(source.map(Byte::toInt), Byte.MAX_VALUE + 1)
+    val codepage = baseEncode(b10, CODEPAGE.length)
+    return codepage.map { CODEPAGE[it] }.joinToString("")
 }
