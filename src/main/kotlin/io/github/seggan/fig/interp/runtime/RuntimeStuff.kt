@@ -87,6 +87,24 @@ fun input(): Any = Interpreter.inputSource.getInput()
 
 fun lastReturnValue(): Any = Interpreter.value
 
+fun negate(obj: Any): Any {
+    val o = vectorise(::negate, obj)
+    if (o != null) return o
+    return if (obj is BigDecimal) {
+        obj.negate()
+    } else {
+        buildString {
+            for (c in obj.toString()) {
+                if (c.isUpperCase()) {
+                    append(c.lowercaseChar())
+                } else {
+                    append(c.uppercaseChar())
+                }
+            }
+        }
+    }
+}
+
 fun pair(obj: Any): Any = listOf(obj, obj).lazy()
 
 fun printNoNl(obj: Any): Any {

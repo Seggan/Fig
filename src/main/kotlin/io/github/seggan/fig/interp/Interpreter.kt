@@ -2,8 +2,11 @@ package io.github.seggan.fig.interp
 
 import io.github.seggan.fig.interp.runtime.InputSource
 import io.github.seggan.fig.interp.runtime.figPrint
+import io.github.seggan.fig.interp.runtime.listify
 import io.github.seggan.fig.parsing.Node
 import io.github.seggan.fig.parsing.OpNode
+import io.github.seggan.fig.parsing.UnpackBulkNode
+import io.github.seggan.fig.parsing.UnpackNode
 import java.lang.invoke.MethodHandle
 import java.lang.invoke.MethodHandles
 import java.lang.invoke.MethodType
@@ -34,7 +37,27 @@ object Interpreter {
         val ops = mutableListOf<Any>()
         for (child in node.input) {
             visit(child)
-            ops.add(value)
+            if (child is UnpackBulkNode) {
+                val iterations = node.operator.arity - ops.size
+                visit(child.body)
+                for (i in 0 until iterations) {
+                    ops.add(value)
+                }
+                break
+            } else if (child is UnpackNode) {
+                val iterations = node.operator.arity - ops.size
+                visit(child.body)
+                val it = listify(value).iterator()
+                for (i in 0 until iterations) {
+                    if (it.hasNext()) {
+                        ops.add(it.next())
+                    } else {
+                        break
+                    }
+                }
+            } else {
+                ops.add(value)
+            }
         }
         value = execute(node.operator, ops)
     }

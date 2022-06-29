@@ -50,6 +50,18 @@ class LazyList(private val generator: Iterator<Any>) : AbstractCollection<Any>()
         return andReturn()
     }
 
+    fun map(transform: (Any) -> Any): LazyList {
+        val it = iterator()
+        return LazyList(object : Iterator<Any> {
+            override fun hasNext(): Boolean {
+                return it.hasNext()
+            }
+            override fun next(): Any {
+                return transform(it.next())
+            }
+        })
+    }
+
     private fun fill(upTo: Int) {
         while (generator.hasNext() && backing.size <= upTo) {
             backing.add(generator.next())

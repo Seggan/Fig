@@ -30,6 +30,21 @@ class OpNode(val operator: Operator, vararg val input: Node) : Node() {
 }
 
 class LoopNode(private val body: List<Node>) : Node() {
-    override fun toString(): String = "({${body.joinToString(" ")}})"
+    override fun toString(): String = "((${body.joinToString(" ")}))"
     override fun accept(visitor: Interpreter) = visitor.visitLoop(body)
+}
+
+class UnpackNode(val body: Node) : Node() {
+    override fun toString(): String = "(u ${body.toString()})"
+    override fun accept(visitor: Interpreter) {}
+}
+
+class UnpackBulkNode(val body: Node) : Node() {
+    override fun toString(): String = "(U ${body.toString()})"
+    override fun accept(visitor: Interpreter) {}
+}
+
+object NopNode : Node() {
+    override fun toString(): String = ""
+    override fun accept(visitor: Interpreter) {}
 }

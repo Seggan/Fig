@@ -37,7 +37,7 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     TODO_13("K"),
     LENGTH("L", 1),
     MAP("M", 2),
-    TODO_14("N"),
+    NEGATE("N", 1),
     TODO_15("O"),
     TODO_16("P"),
     LAST_RETURN_VALUE("Q", 0),

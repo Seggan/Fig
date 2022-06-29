@@ -51,7 +51,7 @@ class Parser(tokens: List<Token>) {
                 }
                 parseOp(operator ?: throw IllegalArgumentException("Unknown operator: ${token.value}"))
             }
-            else -> throw IllegalArgumentException("Unknown token type: ${token.type}")
+            else -> NopNode
         }
     }
 
@@ -66,8 +66,14 @@ class Parser(tokens: List<Token>) {
                 val token = iterator.next()
                 if (token.type == TokenType.CLOSER) {
                     break
+                } else if (token.type == TokenType.UNPACK) {
+                    args.add(UnpackNode(parseToken(iterator.next())))
+                    break
+                } else if (token.type == TokenType.UNPACK_BULK) {
+                    args.add(UnpackBulkNode(parseToken(iterator.next())))
+                } else {
+                    args.add(parseToken(token))
                 }
-                args.add(parseToken(token))
             }
         } else {
             for (i in 0 until op.arity) {
@@ -84,7 +90,11 @@ class Parser(tokens: List<Token>) {
                         }
                         break
                     } else {
-                        args.add(parseToken(token))
+                        when (token.type) {
+                            TokenType.UNPACK -> args.add(UnpackNode(parseToken(iterator.next())))
+                            TokenType.UNPACK_BULK -> args.add(UnpackBulkNode(parseToken(iterator.next())))
+                            else -> args.add(parseToken(token))
+                        }
                     }
                 }
             }

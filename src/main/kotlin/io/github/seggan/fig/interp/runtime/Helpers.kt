@@ -1,5 +1,6 @@
 package io.github.seggan.fig.interp.runtime
 
+import java.lang.invoke.MethodHandle
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -116,6 +117,34 @@ fun listify(obj: Any): LazyList {
         is BigDecimal -> obj.stripTrailingZeros().toPlainString().map { it - '0' }.lazy()
         else -> obj.toString().map(Char::toString).lazy()
     }
+}
+
+fun vectorise(function: (Any) -> Any, arg: Any): Any? {
+    if (arg is LazyList) {
+        return arg.map(function)
+    }
+    return null
+}
+
+fun vectorise(function: (Any, Any) -> Any, arg1: Any, arg2: Any): Any? {
+    if (arg1 is LazyList) {
+        if (arg2 is LazyList) {
+            val it1 = arg1.iterator()
+            val it2 = arg2.iterator()
+            return object : Iterator<Any> {
+                override fun hasNext(): Boolean {
+                    return it1.hasNext() && it2.hasNext()
+                }
+                override fun next(): Any {
+                    return function(it1.next(), it2.next())
+                }
+            }.lazy()
+        }
+        return arg1.map { function(it, arg2) }
+    } else if (arg2 is LazyList) {
+        return arg2.map { function(arg1, it) }
+    }
+    return null
 }
 
 private fun Boolean.toInt(): Int = if (this) 1 else 0

@@ -75,6 +75,8 @@ object Lexer {
                     ')' -> TokenType.CLOSER
                     '\'' -> TokenType.FUNCTION_REFERENCE
                     'D' -> TokenType.DEFINITION
+                    'U' -> TokenType.UNPACK_BULK
+                    'u' -> TokenType.UNPACK
                     else -> TokenType.OPERATOR
                 }
                 tokens.add(Token(type, c.toString() + (if (c in "cm#") input[i++] else "")))
@@ -93,5 +95,7 @@ enum class TokenType {
     CLOSER,
     LOOP,
     FUNCTION_REFERENCE,
-    DEFINITION
+    DEFINITION,
+    UNPACK_BULK,
+    UNPACK
 }
