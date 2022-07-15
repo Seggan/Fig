@@ -2,8 +2,7 @@ package io.github.seggan.fig.interp
 
 enum class Operator(val symbol: String, val arity: Int = -2) {
     // tab newline and space are no-ops
-    INPUT("!", 0),
-    PROGRAM_INPUT("#!", 0),
+    TERNARY_IF("!", 3),
     // " is strings
     // # is misc digraph char
     TODO_2("$"),
@@ -21,7 +20,7 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     LESS_THAN("<", 2),
     EQUAL("=", 2),
     GREATER_THAN(">", 2),
-    IF("?", 3),
+    IF_STATEMENT("?", 3),
     // @ is compressed string
     COMPRESS("#@", 1),
     ALL("A", 1),
@@ -34,7 +33,7 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     TODO_10("H"),
     TODO_11("I"),
     TODO_12("J"),
-    TODO_13("K"),
+    SORT("K", 1),
     LENGTH("L", 1),
     MAP("M", 2),
     NEGATE("N", 1),
@@ -42,16 +41,16 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     TODO_16("P"),
     LAST_RETURN_VALUE("Q", 0),
     REDUCE("R"),
-    TODO_19("S"),
+    SUM("S", 1),
     TODO_20("T"),
     TODO_21("U"),
     TODO_22("V"),
     TODO_23("W"),
-    TODO_24("X"),
+    THIS_FUNCTION("X", 0),
     TODO_25("Y"),
     TODO_26("Z"),
     TODO_27("["),
-    TODO_28("\\"),
+    // \ is char
     TODO_29("]"),
     POWER("^", 2),
     TODO_30("_"),
@@ -79,7 +78,8 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     TODO_47("u"),
     TODO_48("v"),
     TODO_49("w"),
-    TODO_50("x"),
+    INPUT("x", 0),
+    PROGRAM_INPUT("#x", 0),
     TODO_51("y"),
     TODO_52("z"),
     TODO_53("{"),

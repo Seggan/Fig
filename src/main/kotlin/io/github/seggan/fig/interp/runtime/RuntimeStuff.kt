@@ -49,33 +49,66 @@ fun eor(obj: Any): Any {
                 }
             }.lazy()
         }
-        else -> {
-            throw IllegalArgumentException("Cannot eor $obj")
+        else -> return obj
+    }
+}
+
+fun equal(a: Any, b: Any): Any = equalImpl(a, b).toBigDecimal()
+
+private fun equalImpl(a: Any, b: Any): Boolean {
+    val intStr = sortTypesDyadic<BigDecimal, String>(a, b)
+    if (intStr != null) {
+        return intStr.first.stringify() == intStr.second
+    } else if (a is BigDecimal && b is BigDecimal) {
+        return a.compareTo(b) == 0
+    } else if (a is LazyList && b is LazyList) {
+        val aIt = a.iterator()
+        val bIt = b.iterator()
+        while (true) {
+            if (!aIt.hasNext()) {
+                return !bIt.hasNext()
+            } else if (!bIt.hasNext()) {
+                return !aIt.hasNext()
+            }
+            if (!equalImpl(aIt.next(), bIt.next())) {
+                return false
+            }
         }
+    } else {
+        return a === b
     }
 }
 
 fun generate(a: Any, b: Any): Any {
-    if (b is CallableFunction) {
-        val list = if (a is LazyList) a else listOf(a)
-        val pass = list.reversed().take(b.arity).toMutableList()
-        return sequence {
+    val generateArgs = sortTypesDyadic<CallableFunction, Any>(a, b)
+    if (generateArgs != null) {
+        val (function, arg) = generateArgs
+        val list = if (arg is LazyList) arg else listOf(arg)
+        val pass = list.reversed().take(function.arity).toMutableList()
+        return lazy {
             yieldAll(list)
             while (true) {
-                val next = b.call(pass)
+                val next = function.call(pass)
                 pass.add(next)
-                if (pass.size > b.arity) {
+                if (pass.size > function.arity) {
                     pass.removeAt(0)
                 }
                 yield(next)
             }
-        }.lazy()
+        }
     } else {
-        return figCmp(a, b)
+        return maxOf(a, b, ::figCmp)
     }
 }
 
+fun ifStatement(a: Any, b: Any): Any = if (truthiness(a)) b else a
+
 fun index(a: Any, b: Any): Any {
+    val invariantArgs = sortTypesDyadic<Any, CallableFunction>(a, b)
+    if (invariantArgs != null) {
+        val (arg, f) = invariantArgs
+        return equal(arg, f.call(arg))
+    }
     return if (a is BigDecimal) {
         listify(b)[a.toInt()]
     } else {
@@ -90,11 +123,10 @@ fun lastReturnValue(): Any = Interpreter.value
 fun negate(obj: Any): Any {
     val o = vectorise(::negate, obj)
     if (o != null) return o
-    return if (obj is BigDecimal) {
-        obj.negate()
-    } else {
-        buildString {
-            for (c in obj.toString()) {
+    return when (obj) {
+        is BigDecimal -> obj.negate()
+        is String -> buildString {
+            for (c in obj) {
                 if (c.isUpperCase()) {
                     append(c.lowercaseChar())
                 } else {
@@ -102,10 +134,11 @@ fun negate(obj: Any): Any {
                 }
             }
         }
+        else -> obj
     }
 }
 
-fun pair(obj: Any): Any = listOf(obj, obj).lazy()
+fun pair(obj: Any): Any = lazy(obj, obj)
 
 fun printNoNl(obj: Any): Any {
     figPrint(obj, null)
@@ -119,29 +152,43 @@ fun println(obj: Any): Any {
 
 fun programInput(): Any = Interpreter.programInput.getInput()
 
-private fun figCmp(a: Any, b: Any): Int {
-    return if (a is BigDecimal && b is BigDecimal) {
-        a.compareTo(b)
-    } else if (a is LazyList && b is LazyList) {
-        val aIt = a.iterator()
-        val bIt = b.iterator()
-        var cmp: Int
-        while (true) {
-            if (!aIt.hasNext()) {
-                return if (bIt.hasNext()) -1 else 0
-            }
-            if (!bIt.hasNext()) {
-                return if (aIt.hasNext()) 1 else 0
-            }
-            val aNext = aIt.next()
-            val bNext = bIt.next()
-            cmp = figCmp(aNext, bNext)
-            if (cmp != 0) {
-                break
+fun sort(obj: Any): Any {
+    return when (obj) {
+        is LazyList -> obj.sortedWith(::figCmp).lazy()
+        is BigDecimal -> {
+            val string = obj.stringify()
+            if (string.contains('.')) {
+                val (intPart, decPart) = string.split('.')
+                "${sort(intPart)}.${sort(decPart)}".toBigDecimal()
+            } else {
+                sort(string).toString().toBigDecimal()
             }
         }
-        cmp
-    } else {
-        a.toString().compareTo(b.toString())
+        is String -> String(obj.toCharArray().sortedArray())
+        else -> obj
     }
 }
+
+fun sum(obj: Any): Any {
+    return when (obj) {
+        is LazyList -> {
+            if (obj.isEmpty()) {
+                BigDecimal.ZERO
+            } else {
+                val it = obj.iterator()
+                var sum = it.next()
+                while (it.hasNext()) {
+                    sum = add(sum, it.next())
+                }
+                sum
+            }
+        }
+        is BigDecimal -> obj.stringify().toCharArray().filter { it != '.' }.sumOf { it - '0' }.toBigDecimal()
+        is String -> obj.chars().sum()
+        else -> obj
+    }
+}
+
+fun ternaryIf(a: Any, b: Any, c: Any): Any = if (truthiness(a)) b else c
+
+fun thisFunction(): Any = Interpreter.functionStack.first()

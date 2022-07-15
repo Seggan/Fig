@@ -2,7 +2,6 @@ package io.github.seggan.fig.interp.runtime
 
 class LazyList(private val generator: Iterator<Any>) : AbstractCollection<Any>() {
 
-    constructor(iterable: Iterable<Any>) : this(iterable.iterator())
     constructor(sequence: Sequence<Any>) : this(sequence.iterator())
 
     private val backing = mutableListOf<Any>()
@@ -70,5 +69,6 @@ class LazyList(private val generator: Iterator<Any>) : AbstractCollection<Any>()
 }
 
 fun Iterable<Any>.lazy(): LazyList = LazyList(this.iterator())
-fun Sequence<Any>.lazy(): LazyList = LazyList(this.iterator())
 fun Iterator<Any>.lazy(): LazyList = LazyList(this)
+fun lazy(vararg elements: Any): LazyList = LazyList(elements.iterator())
+fun lazy(seqGen: suspend SequenceScope<Any>.() -> Unit): LazyList = LazyList(sequence(seqGen))

@@ -2,8 +2,6 @@ package io.github.seggan.fig.parsing
 
 import io.github.seggan.fig.interp.Interpreter
 import io.github.seggan.fig.interp.Operator
-import io.github.seggan.fig.interp.runtime.CallableFunction
-import java.math.BigDecimal
 
 sealed class Node {
     abstract override fun toString(): String
@@ -35,12 +33,12 @@ class LoopNode(private val body: List<Node>) : Node() {
 }
 
 class UnpackNode(val body: Node) : Node() {
-    override fun toString(): String = "(u ${body.toString()})"
+    override fun toString(): String = "(u $body)"
     override fun accept(visitor: Interpreter) {}
 }
 
 class UnpackBulkNode(val body: Node) : Node() {
-    override fun toString(): String = "(U ${body.toString()})"
+    override fun toString(): String = "(U $body)"
     override fun accept(visitor: Interpreter) {}
 }
 

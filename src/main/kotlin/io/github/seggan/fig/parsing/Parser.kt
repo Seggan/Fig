@@ -3,6 +3,7 @@ package io.github.seggan.fig.parsing
 import io.github.seggan.fig.interp.CONSTANTS
 import io.github.seggan.fig.interp.Operator
 import io.github.seggan.fig.interp.runtime.CallableFunction
+import io.github.seggan.fig.interp.runtime.FigFunction
 
 class Parser(tokens: List<Token>) {
 
@@ -21,7 +22,7 @@ class Parser(tokens: List<Token>) {
         return when (token.type) {
             TokenType.STRING -> ConstantNode(token.value)
             TokenType.NUMBER -> ConstantNode(token.value.toBigDecimal())
-            TokenType.FUNCTION_REFERENCE -> ConstantNode(CallableFunction(parseToken(iterator.next()))) { "'$it" }
+            TokenType.FUNCTION_REFERENCE -> ConstantNode(FigFunction(parseToken(iterator.next()))) { "'$it" }
             TokenType.LOOP -> {
                 val body = mutableListOf<Node>()
                 while (iterator.hasNext()) {

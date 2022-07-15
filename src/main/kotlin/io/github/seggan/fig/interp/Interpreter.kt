@@ -1,5 +1,6 @@
 package io.github.seggan.fig.interp
 
+import io.github.seggan.fig.interp.runtime.CallableFunction
 import io.github.seggan.fig.interp.runtime.InputSource
 import io.github.seggan.fig.interp.runtime.figPrint
 import io.github.seggan.fig.interp.runtime.listify
@@ -17,10 +18,20 @@ object Interpreter {
     var value: Any = BigDecimal.ZERO
     lateinit var inputSource: InputSource
     lateinit var programInput: InputSource
+    val functionStack = ArrayDeque<CallableFunction>()
 
     fun interpret(ast: List<Node>, input: List<String>) {
         inputSource = InputSource(input)
         programInput = inputSource
+        functionStack.addFirst(object : CallableFunction(input.size) {
+            override fun callImpl(inputSource: InputSource): Any {
+                val inp = this@Interpreter.inputSource
+                this@Interpreter.inputSource = inputSource
+                visit(ast)
+                this@Interpreter.inputSource = inp
+                return value
+            }
+        })
         visit(ast)
         figPrint(value)
     }

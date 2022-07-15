@@ -1,16 +1,19 @@
 package io.github.seggan.fig.interp.runtime
 
+import java.math.BigDecimal
+
 private val numberPattern = "\\d+(\\.\\d+)?".toRegex()
 private val listPattern = "\\[(.+)(?:,\\s*(.+))*]".toRegex()
 
 class InputSource(private val objects: Iterable<Any>) {
 
-    private var idx = 0
     private var iterator = objects.iterator()
+    private val isEmpty = !iterator.hasNext()
 
     constructor(strings: List<String>) : this(strings.map(::eval))
 
     fun getInput(): Any {
+        if (isEmpty) return BigDecimal.ZERO
         val ret = iterator.next()
         if (!iterator.hasNext()) {
             iterator = objects.iterator()
@@ -23,9 +26,8 @@ private fun eval(str: String): Any {
     return if (numberPattern.matches(str)) {
         str.toBigDecimal()
     } else {
-        @Suppress("IfThenToElvis")
         if (listPattern.matches(str)) {
-            return str.substring(1, str.length - 1).split(",").map(::eval).lazy()
+            return str.substring(1, str.length - 1).split(',').map(String::trim).map(::eval).lazy()
         } else if (str.startsWith('"') && str.endsWith('"')) {
             str.substring(1, str.length - 1)
         } else {
