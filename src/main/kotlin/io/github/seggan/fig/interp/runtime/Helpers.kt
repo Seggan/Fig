@@ -148,7 +148,7 @@ fun figPrint(obj: Any, end: String? = "\n") {
 fun listify(obj: Any): LazyList {
     return when (obj) {
         is LazyList -> obj
-        is BigDecimal -> obj.stringify().map { it - '0' }.lazy()
+        is BigDecimal -> obj.stringify().filter { it != '.' }.map { it - '0' }.map(Int::toBigDecimal).lazy()
         else -> obj.toString().map(Char::toString).lazy()
     }
 }
@@ -215,3 +215,23 @@ private operator fun BigInteger.times(i: Int): BigInteger = this * i.toBigIntege
 
 fun Boolean.toBigDecimal(): BigDecimal = if (this) BigDecimal.ONE else BigDecimal.ZERO
 fun BigDecimal.stringify(): String = this.stripTrailingZeros().toPlainString()
+
+fun BigDecimal.mapDigits(mappingFunction: (Int) -> Int): BigDecimal? {
+    val string = stringify()
+    if (string.contains('.')) {
+        val split = string.split('.')
+        val mapped = split.map { s -> s.toCharArray().map { it - '0' }.map(mappingFunction).joinToString("") }
+        return mapped.joinToString(".").toBigDecimalOrNull()
+    }
+    return string.toCharArray().map { it - '0' }.map(mappingFunction).joinToString("").toBigDecimalOrNull()
+}
+
+fun BigDecimal.filterDigits(filterFunction: (Int) -> Boolean): BigDecimal? {
+    val string = stringify()
+    if (string.contains('.')) {
+        val split = string.split('.')
+        val mapped = split.map { s -> s.toCharArray().map { it - '0' }.filter(filterFunction).joinToString("") }
+        return mapped.joinToString(".").toBigDecimalOrNull()
+    }
+    return string.toCharArray().map { it - '0' }.filter(filterFunction).joinToString("").toBigDecimalOrNull()
+}

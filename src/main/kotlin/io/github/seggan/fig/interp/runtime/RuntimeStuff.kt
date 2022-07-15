@@ -101,8 +101,6 @@ fun generate(a: Any, b: Any): Any {
     }
 }
 
-fun ifStatement(a: Any, b: Any): Any = if (truthiness(a)) b else a
-
 fun index(a: Any, b: Any): Any {
     val invariantArgs = sortTypesDyadic<Any, CallableFunction>(a, b)
     if (invariantArgs != null) {
@@ -118,7 +116,31 @@ fun index(a: Any, b: Any): Any {
 
 fun input(): Any = Interpreter.inputSource.getInput()
 
+fun isFunction(obj: Any): Any = (obj is CallableFunction).toBigDecimal()
+
+fun isList(obj: Any): Any = (obj is LazyList).toBigDecimal()
+
+fun isNumber(obj: Any) = (obj is BigDecimal).toBigDecimal()
+
+fun isString(obj: Any): Any = (obj is String).toBigDecimal()
+
 fun lastReturnValue(): Any = Interpreter.value
+
+fun map(a: Any, b: Any): Any {
+    if (a is CallableFunction && b is CallableFunction) {
+        return object : CallableFunction(b.arity) {
+            override fun callImpl(inputSource: InputSource): Any {
+                return a.call(b.call(inputSource))
+            }
+        }
+    }
+    val mapArgs = sortTypesDyadic<Any, CallableFunction>(a, b)
+    if (mapArgs != null) {
+        val (arg, f) = mapArgs
+        return listify(arg).map(f::call).toType(arg::class)
+    }
+    return a
+}
 
 fun negate(obj: Any): Any {
     val o = vectorise(::negate, obj)
@@ -151,6 +173,19 @@ fun println(obj: Any): Any {
 }
 
 fun programInput(): Any = Interpreter.programInput.getInput()
+
+fun remove(a: Any, b: Any): Any {
+    if (a is String && b is String) {
+        return a + b.substring(a.length)
+    }
+    val monadicCallArgs = sortTypesDyadic<Any, CallableFunction>(a, b)
+    return when {
+        monadicCallArgs != null -> monadicCallArgs.second.call(monadicCallArgs.first)
+        a is BigDecimal -> a.filterDigits { !equalImpl(it.toBigDecimal(), b) } ?: a
+        a is LazyList -> a.filter { !equalImpl(it, b) }
+        else -> a
+    }
+}
 
 fun sort(obj: Any): Any {
     return when (obj) {
@@ -188,7 +223,5 @@ fun sum(obj: Any): Any {
         else -> obj
     }
 }
-
-fun ternaryIf(a: Any, b: Any, c: Any): Any = if (truthiness(a)) b else c
 
 fun thisFunction(): Any = Interpreter.functionStack.first()

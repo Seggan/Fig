@@ -10,9 +10,12 @@ abstract class CallableFunction(val arity: Int) {
     protected abstract fun callImpl(inputSource: InputSource): Any
 
     fun call(inputSource: InputSource): Any {
+        val oldIn = Interpreter.inputSource
+        Interpreter.inputSource = inputSource
         Interpreter.functionStack.addFirst(this)
         val value = callImpl(inputSource)
         Interpreter.functionStack.removeFirst()
+        Interpreter.inputSource = oldIn
         return value
     }
 
@@ -33,10 +36,7 @@ fun countIns(node: OpNode): Int {
 class FigFunction(val body: Node, arity: Int = if (body is OpNode) countIns(body) else 0) : CallableFunction(arity) {
 
     override fun callImpl(inputSource: InputSource): Any {
-        val prevSource = Interpreter.inputSource
-        Interpreter.inputSource = inputSource
         Interpreter.visit(body)
-        Interpreter.inputSource = prevSource
         return Interpreter.value
     }
 }

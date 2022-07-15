@@ -42,6 +42,18 @@ class UnpackBulkNode(val body: Node) : Node() {
     override fun accept(visitor: Interpreter) {}
 }
 
+class IfNode(val cond: Node, val then: Node, val otherwise: Node? = null): Node() {
+    override fun toString(): String {
+        return if (otherwise == null) {
+            "(? $cond $then)"
+        } else {
+            "(! $cond $then $otherwise)"
+        }
+    }
+
+    override fun accept(visitor: Interpreter) = Interpreter.visitIf(this)
+}
+
 object NopNode : Node() {
     override fun toString(): String = ""
     override fun accept(visitor: Interpreter) {}

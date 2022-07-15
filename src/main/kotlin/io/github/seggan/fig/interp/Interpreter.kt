@@ -2,8 +2,11 @@ package io.github.seggan.fig.interp
 
 import io.github.seggan.fig.interp.runtime.CallableFunction
 import io.github.seggan.fig.interp.runtime.InputSource
+import io.github.seggan.fig.interp.runtime.LazyList
 import io.github.seggan.fig.interp.runtime.figPrint
 import io.github.seggan.fig.interp.runtime.listify
+import io.github.seggan.fig.interp.runtime.truthiness
+import io.github.seggan.fig.parsing.IfNode
 import io.github.seggan.fig.parsing.Node
 import io.github.seggan.fig.parsing.OpNode
 import io.github.seggan.fig.parsing.UnpackBulkNode
@@ -16,6 +19,17 @@ import java.math.BigDecimal
 object Interpreter {
 
     var value: Any = BigDecimal.ZERO
+        set(value) {
+            if (
+                value !is BigDecimal
+                && value !is CallableFunction
+                && value !is String
+                && value !is LazyList
+            ) {
+                throw IllegalArgumentException("Illegal Fig value: '$value', class: '${value::class.java.name}'")
+            }
+            field = value
+        }
     lateinit var inputSource: InputSource
     lateinit var programInput: InputSource
     val functionStack = ArrayDeque<CallableFunction>()
@@ -25,10 +39,7 @@ object Interpreter {
         programInput = inputSource
         functionStack.addFirst(object : CallableFunction(input.size) {
             override fun callImpl(inputSource: InputSource): Any {
-                val inp = this@Interpreter.inputSource
-                this@Interpreter.inputSource = inputSource
                 visit(ast)
-                this@Interpreter.inputSource = inp
                 return value
             }
         })
@@ -80,6 +91,15 @@ object Interpreter {
     fun visitLoop(body: List<Node>) {
         while (true) {
             visit(body)
+        }
+    }
+
+    fun visitIf(node: IfNode) {
+        visit(node.cond)
+        if (truthiness(value)) {
+            visit(node.then)
+        } else if (node.otherwise != null) {
+            visit(node.otherwise)
         }
     }
 }

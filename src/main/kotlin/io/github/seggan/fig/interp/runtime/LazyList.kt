@@ -1,5 +1,8 @@
 package io.github.seggan.fig.interp.runtime
 
+import java.math.BigDecimal
+import kotlin.reflect.KClass
+
 class LazyList(private val generator: Iterator<Any>) : AbstractCollection<Any>() {
 
     constructor(sequence: Sequence<Any>) : this(sequence.iterator())
@@ -59,6 +62,26 @@ class LazyList(private val generator: Iterator<Any>) : AbstractCollection<Any>()
                 return transform(it.next())
             }
         })
+    }
+    
+    fun toType(clazz: KClass<*>): Any {
+        val tClass = clazz.java
+        if (LazyList::class.java.isAssignableFrom(tClass)) {
+            return this
+        } else if (String::class.java == tClass) {
+            return joinToString("")
+        } else if (BigDecimal::class.java.isAssignableFrom(tClass)) {
+            return joinToString("").toBigDecimal()
+        } else if (CallableFunction::class.java.isAssignableFrom(tClass)) {
+            return object : CallableFunction(0) {
+                val it = iterator()
+                override fun callImpl(inputSource: InputSource): Any {
+                    return if (it.hasNext()) it.next() else BigDecimal.ZERO
+                }
+            }
+        } else {
+            throw IllegalArgumentException("Illegal type $tClass")
+        }
     }
 
     private fun fill(upTo: Int) {

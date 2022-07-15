@@ -2,7 +2,6 @@ package io.github.seggan.fig.parsing
 
 import io.github.seggan.fig.interp.CONSTANTS
 import io.github.seggan.fig.interp.Operator
-import io.github.seggan.fig.interp.runtime.CallableFunction
 import io.github.seggan.fig.interp.runtime.FigFunction
 
 class Parser(tokens: List<Token>) {
@@ -50,13 +49,18 @@ class Parser(tokens: List<Token>) {
                         }
                     }
                 }
-                parseOp(operator ?: throw IllegalArgumentException("Unknown operator: ${token.value}"))
+                val op = parseOp(operator ?: throw IllegalArgumentException("Unknown operator: ${token.value}"))
+                when (op.operator) {
+                    Operator.IF_STATEMENT -> IfNode(op.input[0], op.input[1])
+                    Operator.TERNARY_IF -> IfNode(op.input[0], op.input[1], op.input[2])
+                    else -> op
+                }
             }
             else -> NopNode
         }
     }
 
-    private fun parseOp(op: Operator): Node {
+    private fun parseOp(op: Operator): OpNode {
         val args = mutableListOf<Node>()
         val arity = op.arity
         if (arity == -2) {
