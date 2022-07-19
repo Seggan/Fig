@@ -18,7 +18,7 @@ class LazyList(private val generator: Iterator<Any>) : AbstractCollection<Any>()
 
     operator fun get(index: Int): Any {
         fill(index)
-        return backing[index]
+        return assertLegalType(backing[index])
     }
 
     fun hasIndex(index: Int): Boolean {

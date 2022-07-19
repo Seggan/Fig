@@ -1,8 +1,8 @@
 package io.github.seggan.fig
 
 import io.github.seggan.fig.interp.Interpreter
-import io.github.seggan.fig.interp.runtime.baseDecode
-import io.github.seggan.fig.interp.runtime.baseEncode
+import io.github.seggan.fig.interp.runtime.bijectiveBaseDecode
+import io.github.seggan.fig.interp.runtime.bijectiveBaseEncode
 import io.github.seggan.fig.parsing.Lexer
 import io.github.seggan.fig.parsing.Parser
 import java.awt.Toolkit
@@ -77,7 +77,7 @@ fun main(args: Array<String>) {
 }
 
 fun readSource(source: ByteArray): String {
-    val b10 = baseDecode(source.map(Byte::toInt), Byte.MAX_VALUE + 1)
-    val codepage = baseEncode(b10, CODEPAGE.length)
+    val b10 = bijectiveBaseDecode(source.map(Byte::toInt), Byte.MAX_VALUE + 1)
+    val codepage = bijectiveBaseEncode(b10, CODEPAGE.length)
     return codepage.map { CODEPAGE[it] }.joinToString("")
 }

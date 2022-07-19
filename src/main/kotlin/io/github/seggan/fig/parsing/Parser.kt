@@ -49,12 +49,7 @@ class Parser(tokens: List<Token>) {
                         }
                     }
                 }
-                val op = parseOp(operator ?: throw IllegalArgumentException("Unknown operator: ${token.value}"))
-                when (op.operator) {
-                    Operator.IF_STATEMENT -> IfNode(op.input[0], op.input[1])
-                    Operator.TERNARY_IF -> IfNode(op.input[0], op.input[1], op.input[2])
-                    else -> op
-                }
+                parseOp(operator ?: throw IllegalArgumentException("Unknown operator: ${token.value}"))
             }
             else -> NopNode
         }

@@ -2,7 +2,7 @@ package io.github.seggan.fig.interp
 
 import io.github.seggan.fig.interp.runtime.CallableFunction
 import io.github.seggan.fig.interp.runtime.InputSource
-import io.github.seggan.fig.interp.runtime.LazyList
+import io.github.seggan.fig.interp.runtime.assertLegalType
 import io.github.seggan.fig.interp.runtime.figPrint
 import io.github.seggan.fig.interp.runtime.listify
 import io.github.seggan.fig.interp.runtime.truthiness
@@ -20,15 +20,7 @@ object Interpreter {
 
     var value: Any = BigDecimal.ZERO
         set(value) {
-            if (
-                value !is BigDecimal
-                && value !is CallableFunction
-                && value !is String
-                && value !is LazyList
-            ) {
-                throw IllegalArgumentException("Illegal Fig value: '$value', class: '${value::class.java.name}'")
-            }
-            field = value
+            field = assertLegalType(value)
         }
     lateinit var inputSource: InputSource
     lateinit var programInput: InputSource
@@ -51,37 +43,53 @@ object Interpreter {
         node.accept(this)
     }
 
+    fun execute(node: Node): Any {
+        node.accept(this)
+        return value
+    }
+
     private fun visit(nodes: List<Node>) {
         nodes.forEach { visit(it) }
     }
 
     fun visitOp(node: OpNode) {
         val ops = mutableListOf<Any>()
-        for (child in node.input) {
-            visit(child)
-            if (child is UnpackBulkNode) {
-                val iterations = node.operator.arity - ops.size
-                visit(child.body)
-                for (i in 0 until iterations) {
+        if (node.operator.lazy) {
+            ops.addAll(node.input)
+        } else {
+            for (child in node.input) {
+                if (ops.size == node.operator.arity) {
+                    break
+                }
+                visit(child)
+                if (child is UnpackBulkNode) {
+                    val iterations = node.operator.arity - ops.size
+                    visit(child.body)
+                    for (i in 0 until iterations) {
+                        ops.add(value)
+                    }
+                    break
+                } else if (child is UnpackNode) {
+                    val iterations = node.operator.arity - ops.size
+                    visit(child.body)
+                    val it = listify(value).iterator()
+                    for (i in 0 until iterations) {
+                        if (it.hasNext()) {
+                            ops.add(it.next())
+                        } else {
+                            break
+                        }
+                    }
+                } else {
                     ops.add(value)
                 }
-                break
-            } else if (child is UnpackNode) {
-                val iterations = node.operator.arity - ops.size
-                visit(child.body)
-                val it = listify(value).iterator()
-                for (i in 0 until iterations) {
-                    if (it.hasNext()) {
-                        ops.add(it.next())
-                    } else {
-                        break
-                    }
-                }
-            } else {
-                ops.add(value)
             }
         }
-        value = execute(node.operator, ops)
+        try {
+            value = execute(node.operator, ops)
+        } catch (e: IllegalArgumentException) {
+            throw IllegalStateException("Found illegal value when executing operator ${node.operator}:", e)
+        }
     }
 
     fun visitConstant(obj: Any) {

@@ -5,7 +5,47 @@ import java.math.BigInteger
 
 private val regexCache = mutableMapOf<String, Regex>()
 
-fun baseEncode(n: BigInteger, base: Int): List<Int> {
+
+fun <T> assertLegalType(obj: T): T {
+    if (obj !is BigDecimal && obj !is CallableFunction && obj !is String && obj !is LazyList) {
+        throw IllegalArgumentException("Illegal Fig value: '$obj', class: '${obj!!::class.java.name}'")
+    }
+    return obj
+}
+
+fun toBase(n: BigInteger, base: Int): List<Int> {
+    val ret = mutableListOf<Int>()
+    val b = base.toBigInteger()
+    var i = if (n.signum() < 0) n.negate() else n
+    while (i > BigInteger.ZERO) {
+        ret.add((i % b).toInt())
+        i /= b
+    }
+    ret.reverse()
+    if (n.signum() < 0 && ret.isNotEmpty()) {
+        ret[0] = -ret[0]
+    }
+    return ret
+}
+
+fun fromBase(n: List<Int>, base: Int): BigInteger {
+    val b = base.toBigInteger()
+    val i = n.toMutableList()
+    if (i[0] < 0) {
+        i[0] = -i[0]
+    }
+    var ret = BigInteger.ZERO
+    for (digit in i) {
+        ret *= b
+        ret += digit
+    }
+    if (n[0] < 0) {
+        ret = ret.negate()
+    }
+    return ret
+}
+
+fun bijectiveBaseEncode(n: BigInteger, base: Int): List<Int> {
     val ret = mutableListOf<Int>()
     val b = base.toBigInteger()
     var i = n
@@ -17,7 +57,7 @@ fun baseEncode(n: BigInteger, base: Int): List<Int> {
     return ret.reversed()
 }
 
-fun baseDecode(a: List<Int>, base: Int): BigInteger {
+fun bijectiveBaseDecode(a: List<Int>, base: Int): BigInteger {
     val b = base.toBigInteger()
     var n = BigInteger.ZERO
     for (i in a) {
@@ -61,12 +101,12 @@ fun compress(str: String, codepage: String, cpage: String, dict: List<String>): 
         num *= 8
         num += tag
     }
-    return baseEncode(num, codepage.length).map(codepage::get).joinToString("")
+    return bijectiveBaseEncode(num, codepage.length).map(codepage::get).joinToString("")
 }
 
 fun decompress(str: String, codepage: String, cpage: String, dict: List<String>): String {
     val res = mutableListOf<String>()
-    var num = baseDecode(str.map(codepage::indexOf), codepage.length)
+    var num = bijectiveBaseDecode(str.map(codepage::indexOf), codepage.length)
     while (num > BigInteger.ZERO) {
         val tag = num % 8
         num /= 8
@@ -153,6 +193,15 @@ fun listify(obj: Any): LazyList {
     }
 }
 
+fun numify(obj: Any): BigDecimal {
+    return when (obj) {
+        is LazyList -> obj.size.toBigDecimal()
+        is String -> obj.toBigDecimalOrNull() ?: obj.length.toBigDecimal()
+        is BigDecimal -> obj
+        else -> throw IllegalArgumentException("Wrong type for numification: $obj")
+    }
+}
+
 fun regex(regex: String): Regex {
     return regexCache.getOrPut(regex) { regex.toRegex() }
 }
@@ -222,7 +271,11 @@ inline fun BigDecimal.applyOnParts(crossinline mappingFunction: (String) -> Any)
 }
 
 /**
- * Same as the Any#toString() except it uses the stringify() function on BigDecimals to prevent stringification
+ * Same as the [Any.toString] except it uses the [stringify] function on [BigDecimal]s to prevent stringification
  * into scientific notation
  */
 fun Any.asString(): String = if (this is BigDecimal) stringify() else toString()
+
+fun <T : Any> Iterable<T>.joinByNothing(): String {
+    return joinToString("", transform = Any::asString)
+}

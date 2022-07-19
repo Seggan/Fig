@@ -1,8 +1,13 @@
 package io.github.seggan.fig.interp
 
-enum class Operator(val symbol: String, val arity: Int = -2) {
+/**
+ * @param symbol symbol of the operator
+ * @param arity arity of the operator. -1 is variadic, -2 is unassigned
+ * @param lazy if the evaluation of the arguments is delayed until control is passed to the operator
+ */
+enum class Operator(val symbol: String, val arity: Int = -2, val lazy: Boolean = false) {
     // tab newline and space are no-ops
-    TERNARY_IF("!", 3),
+    TERNARY_IF("!", 3, true),
     // " is strings
     // # is misc digraph char
     TODO_2("$"),
@@ -20,11 +25,11 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     LESS_THAN("<", 2),
     EQUAL("=", 2),
     GREATER_THAN(">", 2),
-    IF_STATEMENT("?", 3),
+    IF_STATEMENT("?", 2, true),
     // @ is compressed string
     COMPRESS("#@", 1),
     ALL("A", 1),
-    TODO_6("B"),
+    FROM_BINARY("B", 1),
     CHR_ORD("C", 1),
     // D is function definition
     TODO_8("E"),
@@ -37,7 +42,7 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     LENGTH("L", 1),
     MAP("M", 2),
     NEGATE("N", 1),
-    TODO_15("O"),
+    ODD("O", 1),
     TODO_16("P"),
     LAST_RETURN_VALUE("Q", 0),
     REDUCE("R"),
@@ -56,11 +61,11 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     TODO_30("_"),
     LIST("`", -1),
     ANY("a", 1),
-    TODO_31("b"),
+    TO_BINARY("b", 1),
     // c is a digraph char
     TODO_32("d"),
-    TODO_33("e"),
-    TODO_34("f"),
+    VECTORISE_ON("e", 1, true),
+    FLATTEN("f", 1),
     IS_FUNCTION("#f", 1),
     TODO_35("g"),
     TODO_36("h"),
@@ -81,7 +86,7 @@ enum class Operator(val symbol: String, val arity: Int = -2) {
     TODO_46("t"),
     TODO_47("u"),
     TODO_48("v"),
-    TODO_49("w"),
+    WRAP_TWO("w", 2),
     INPUT("x", 0),
     PROGRAM_INPUT("#x", 0),
     TODO_51("y"),

@@ -6,13 +6,35 @@ import io.github.seggan.fig.COMPRESSABLE_CHARS
 import io.github.seggan.fig.COMPRESSION_CODEPAGE
 import io.github.seggan.fig.DICTIONARY
 import io.github.seggan.fig.interp.Interpreter
+import io.github.seggan.fig.interp.Operator
+import io.github.seggan.fig.parsing.Node
+import io.github.seggan.fig.parsing.OpNode
 import java.math.BigDecimal
+import java.util.Locale
 
 fun add(a: Any, b: Any): Any {
+    val o = vectorise(::add, a, b)
+    if (o != null) return o
     return if (a is BigDecimal && b is BigDecimal) {
         a + b
     } else {
         a.asString() + b.asString()
+    }
+}
+
+fun any(obj: Any): Any {
+    return when (obj) {
+        is LazyList -> obj.any(::truthiness).toBigDecimal()
+        is BigDecimal -> object : Iterator<Any> {
+            private var i = BigDecimal.ZERO
+            override fun hasNext(): Boolean = i <= obj
+            override fun next(): Any {
+                i += BigDecimal.ONE
+                return i
+            }
+        }.lazy()
+        is String -> obj.lowercase(Locale.ROOT)
+        else -> obj
     }
 }
 
@@ -53,7 +75,14 @@ fun eor(obj: Any): Any {
     }
 }
 
-fun equal(a: Any, b: Any): Any = equalImpl(a, b).toBigDecimal()
+fun equal(a: Any, b: Any): Any {
+    val vectoriseArgs = sortTypesDyadic<Any, LazyList>(a, b)
+    if (vectoriseArgs != null && vectoriseArgs.first !is LazyList) {
+        val o = vectorise(::equal, a, b)
+        if (o != null) return o
+    }
+    return equalImpl(a, b).toBigDecimal()
+}
 
 private fun equalImpl(a: Any, b: Any): Boolean {
     val intStr = sortTypesDyadic<BigDecimal, String>(a, b)
@@ -79,6 +108,34 @@ private fun equalImpl(a: Any, b: Any): Boolean {
     }
 }
 
+fun flatten(obj: Any): Any {
+    return if (obj is LazyList) {
+        flattenImpl(obj).lazy()
+    } else {
+        listify(obj)
+    }
+}
+
+fun flattenImpl(lst: LazyList): List<Any> {
+    val ret = mutableListOf<Any>()
+    for (n in lst) {
+        if (n is LazyList) {
+            ret.addAll(flattenImpl(n))
+        } else {
+            ret.add(n)
+        }
+    }
+    return ret
+}
+
+fun fromBinary(obj: Any): Any {
+    return if (obj is LazyList) {
+        fromBase(obj.toList().map(::numify).map(BigDecimal::toInt), 2).toBigDecimal()
+    } else {
+        obj
+    }
+}
+
 fun generate(a: Any, b: Any): Any {
     val generateArgs = sortTypesDyadic<CallableFunction, Any>(a, b)
     if (generateArgs != null) {
@@ -99,6 +156,13 @@ fun generate(a: Any, b: Any): Any {
     } else {
         return maxOf(a, b, ::figCmp)
     }
+}
+
+fun ifStatement(a: Any, b: Any): Any {
+    if (truthiness(Interpreter.execute(a as Node))) {
+        return Interpreter.execute(b as Node)
+    }
+    return Interpreter.value
 }
 
 fun index(a: Any, b: Any): Any {
@@ -142,7 +206,7 @@ fun map(a: Any, b: Any): Any {
                 it.map { c -> c - '0' }
                     .map(Int::toBigDecimal)
                     .map(f::call)
-                    .joinToString("", transform = Any::asString)
+                    .joinByNothing()
             }
         }
         return listify(arg).map(f::call).toType(arg::class)
@@ -168,7 +232,43 @@ fun negate(obj: Any): Any {
     }
 }
 
+fun odd(obj: Any): Any {
+    return when (obj) {
+        is BigDecimal -> (obj % BigDecimal.valueOf(2) == BigDecimal.ONE).toBigDecimal()
+        is LazyList -> {
+            if (obj.any { it is LazyList }) {
+                obj.map { o -> if (o is LazyList) odd(o) else o }
+            } else {
+                obj.joinByNothing()
+            }
+        }
+        else -> obj
+    }
+}
+
 fun pair(obj: Any): Any = lazy(obj, obj)
+
+fun power(a: Any, b: Any): Any {
+    val sortArgs = sortTypesDyadic<Any, CallableFunction>(a, b)
+    if (sortArgs != null) {
+        val (arg, f) = sortArgs
+        if (arg is BigDecimal) {
+            return arg.applyOnParts {
+                it.map { c -> c - '0' }
+                    .map(Int::toBigDecimal)
+                    .sortedBy { a -> numify(f.call(a)) }
+                    .joinByNothing()
+            }
+        }
+        return listify(arg).sortedBy { numify(f.call(it)) }.lazy().toType(arg::class)
+    } else if (a is BigDecimal && b is BigDecimal) {
+        return b.pow(a.toInt())
+    } else {
+        val o = vectorise(::power, a, b)
+        if (o != null) return o
+        return a
+    }
+}
 
 fun printNoNl(obj: Any): Any {
     figPrint(obj, null)
@@ -189,8 +289,8 @@ fun remove(a: Any, b: Any): Any {
     val monadicCallArgs = sortTypesDyadic<Any, CallableFunction>(a, b)
     return when {
         monadicCallArgs != null -> monadicCallArgs.second.call(monadicCallArgs.first)
-        a is BigDecimal -> a.applyOnParts { it.filter { d -> !equalImpl(d.asString().toBigDecimal(), b) }.asString() }
-        a is LazyList -> a.filter { !equalImpl(it, b) }
+        b is BigDecimal -> b.applyOnParts { it.filter { d -> !equalImpl(d.asString().toBigDecimal(), a) }.asString() }
+        b is LazyList -> b.filter { !equalImpl(it, a) }.lazy()
         else -> a
     }
 }
@@ -224,4 +324,28 @@ fun sum(obj: Any): Any {
     }
 }
 
+fun ternaryIf(a: Any, b: Any, c: Any): Any {
+    return if (truthiness(Interpreter.execute(a as Node))) {
+        Interpreter.execute(b as Node)
+    } else {
+        Interpreter.execute(c as Node)
+    }
+}
+
 fun thisFunction(): Any = Interpreter.functionStack.first()
+
+fun toBinary(obj: Any): Any {
+    val o = vectorise(::toBinary, obj)
+    if (o != null) return o
+    return toBase(numify(obj).toBigInteger(), 2).map(Int::toBigDecimal).lazy()
+}
+
+fun vectoriseOn(a: Any): Any {
+    val op = a as OpNode
+    val input = op.input.toMutableList()
+    input[input.size - 1] = OpNode(Operator.INPUT)
+    val f = FigFunction(OpNode(op.operator, *input.toTypedArray()))
+    return map(f, Interpreter.execute(op.input.last()))
+}
+
+fun wrapTwo(a: Any, b: Any): Any = lazy(a, b)

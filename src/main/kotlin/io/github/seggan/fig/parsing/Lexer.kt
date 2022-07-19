@@ -54,12 +54,14 @@ object Lexer {
                     }
                 }
                 tokens.add(Token(TokenType.STRING, decompress(result, COMPRESSION_CODEPAGE, COMPRESSABLE_CHARS, DICTIONARY)))
-            } else if (c.code in 48..57) {
+            } else if (c == '0') {
+                tokens.add(Token(TokenType.NUMBER, "0"))
+            } else if (c - '0' in 1..9) {
                 val result = StringBuilder()
                 result.append(c)
                 while (i < input.length) {
                     val char = input[i++]
-                    if (char.code in 48..57 || char == '.') {
+                    if (char - '0' in 0..9 || char == '.') {
                         result.append(char)
                     } else {
                         i--
