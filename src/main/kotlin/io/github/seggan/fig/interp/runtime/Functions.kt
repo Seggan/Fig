@@ -26,6 +26,10 @@ abstract class CallableFunction(val arity: Int) {
     fun call(vararg input: Any): Any {
         return call(InputSource(input.toList()))
     }
+
+    fun call(input: Any): Any {
+        return call(InputSource(listOf(input)))
+    }
 }
 
 fun countIns(node: OpNode): Int {

@@ -12,12 +12,12 @@ fun add(a: Any, b: Any): Any {
     return if (a is BigDecimal && b is BigDecimal) {
         a + b
     } else {
-        a.toString() + b.toString()
+        a.asString() + b.asString()
     }
 }
 
 fun compress(obj: Any): Any {
-    val s = obj.toString()
+    val s = obj.asString()
     val compressed = compress(s, COMPRESSION_CODEPAGE, COMPRESSABLE_CHARS, DICTIONARY)
     return if (compressed.length < s.length) "@$compressed\"" else "\"$s\""
 }
@@ -137,6 +137,14 @@ fun map(a: Any, b: Any): Any {
     val mapArgs = sortTypesDyadic<Any, CallableFunction>(a, b)
     if (mapArgs != null) {
         val (arg, f) = mapArgs
+        if (arg is BigDecimal) {
+            return arg.applyOnParts {
+                it.map { c -> c - '0' }
+                    .map(Int::toBigDecimal)
+                    .map(f::call)
+                    .joinToString("", transform = Any::asString)
+            }
+        }
         return listify(arg).map(f::call).toType(arg::class)
     }
     return a
@@ -181,7 +189,7 @@ fun remove(a: Any, b: Any): Any {
     val monadicCallArgs = sortTypesDyadic<Any, CallableFunction>(a, b)
     return when {
         monadicCallArgs != null -> monadicCallArgs.second.call(monadicCallArgs.first)
-        a is BigDecimal -> a.filterDigits { !equalImpl(it.toBigDecimal(), b) } ?: a
+        a is BigDecimal -> a.applyOnParts { it.filter { d -> !equalImpl(d.asString().toBigDecimal(), b) }.asString() }
         a is LazyList -> a.filter { !equalImpl(it, b) }
         else -> a
     }
@@ -190,15 +198,7 @@ fun remove(a: Any, b: Any): Any {
 fun sort(obj: Any): Any {
     return when (obj) {
         is LazyList -> obj.sortedWith(::figCmp).lazy()
-        is BigDecimal -> {
-            val string = obj.stringify()
-            if (string.contains('.')) {
-                val (intPart, decPart) = string.split('.')
-                "${sort(intPart)}.${sort(decPart)}".toBigDecimal()
-            } else {
-                sort(string).toString().toBigDecimal()
-            }
-        }
+        is BigDecimal -> obj.applyOnParts { sort(it).asString() }
         is String -> String(obj.toCharArray().sortedArray())
         else -> obj
     }
@@ -218,7 +218,7 @@ fun sum(obj: Any): Any {
                 sum
             }
         }
-        is BigDecimal -> obj.stringify().toCharArray().filter { it != '.' }.sumOf { it - '0' }.toBigDecimal()
+        is BigDecimal -> obj.applyOnParts { it.sumOf { c -> c - '0' } }
         is String -> obj.chars().sum()
         else -> obj
     }

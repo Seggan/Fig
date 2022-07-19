@@ -122,7 +122,7 @@ fun figCmp(a: Any, b: Any): Int {
     } else if (b is LazyList) {
         figCmp(listify(a), b)
     } else {
-        a.toString().compareTo(b.toString())
+        a.asString().compareTo(b.asString())
     }
 }
 
@@ -149,7 +149,7 @@ fun listify(obj: Any): LazyList {
     return when (obj) {
         is LazyList -> obj
         is BigDecimal -> obj.stringify().filter { it != '.' }.map { it - '0' }.map(Int::toBigDecimal).lazy()
-        else -> obj.toString().map(Char::toString).lazy()
+        else -> obj.asString().map(Char::asString).lazy()
     }
 }
 
@@ -173,7 +173,7 @@ fun truthiness(obj: Any): Boolean {
     return when (obj) {
         is BigDecimal -> obj != BigDecimal.ZERO
         is LazyList -> obj.isNotEmpty()
-        else -> obj.toString().isNotEmpty()
+        else -> obj.asString().isNotEmpty()
     }
 }
 
@@ -216,22 +216,13 @@ private operator fun BigInteger.times(i: Int): BigInteger = this * i.toBigIntege
 fun Boolean.toBigDecimal(): BigDecimal = if (this) BigDecimal.ONE else BigDecimal.ZERO
 fun BigDecimal.stringify(): String = this.stripTrailingZeros().toPlainString()
 
-fun BigDecimal.mapDigits(mappingFunction: (Int) -> Int): BigDecimal? {
-    val string = stringify()
-    if (string.contains('.')) {
-        val split = string.split('.')
-        val mapped = split.map { s -> s.toCharArray().map { it - '0' }.map(mappingFunction).joinToString("") }
-        return mapped.joinToString(".").toBigDecimalOrNull()
-    }
-    return string.toCharArray().map { it - '0' }.map(mappingFunction).joinToString("").toBigDecimalOrNull()
+inline fun BigDecimal.applyOnParts(crossinline mappingFunction: (String) -> Any): BigDecimal {
+    val split = stringify().split('.')
+    return split.map(mappingFunction).joinToString(".", transform = Any::asString).toBigDecimal()
 }
 
-fun BigDecimal.filterDigits(filterFunction: (Int) -> Boolean): BigDecimal? {
-    val string = stringify()
-    if (string.contains('.')) {
-        val split = string.split('.')
-        val mapped = split.map { s -> s.toCharArray().map { it - '0' }.filter(filterFunction).joinToString("") }
-        return mapped.joinToString(".").toBigDecimalOrNull()
-    }
-    return string.toCharArray().map { it - '0' }.filter(filterFunction).joinToString("").toBigDecimalOrNull()
-}
+/**
+ * Same as the Any#toString() except it uses the stringify() function on BigDecimals to prevent stringification
+ * into scientific notation
+ */
+fun Any.asString(): String = if (this is BigDecimal) stringify() else toString()
