@@ -6,12 +6,13 @@ import io.github.seggan.fig.DICTIONARY
 import io.github.seggan.fig.interp.runtime.decompress
 
 object Lexer {
-    fun lex(input: String): List<Token> {
+    fun lex(code: String): List<Token> {
+        val input = code.replace("\r", "")
         val tokens = mutableListOf<Token>()
         var i = 0
         while (i < input.length) {
             val c = input[i++]
-            if (c in "\t\n\r ") {
+            if (c == ' ') {
                 continue
             } else if (c == '"') {
                 val result = buildString {
@@ -79,6 +80,7 @@ object Lexer {
                     'D' -> TokenType.DEFINITION
                     'U' -> TokenType.UNPACK_BULK
                     'u' -> TokenType.UNPACK
+                    '\n' -> TokenType.END_FUNCTION
                     else -> TokenType.OPERATOR
                 }
                 tokens.add(Token(type, c.toString() + (if (c in "cm#") input[i++] else "")))
@@ -99,5 +101,6 @@ enum class TokenType {
     FUNCTION_REFERENCE,
     DEFINITION,
     UNPACK_BULK,
-    UNPACK
+    UNPACK,
+    END_FUNCTION
 }

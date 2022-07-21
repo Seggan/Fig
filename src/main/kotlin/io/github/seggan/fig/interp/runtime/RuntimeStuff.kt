@@ -27,7 +27,7 @@ fun any(obj: Any): Any {
         is LazyList -> obj.any(::truthiness).toBigDecimal()
         is BigDecimal -> object : Iterator<Any> {
             private var i = BigDecimal.ZERO
-            override fun hasNext(): Boolean = i <= obj
+            override fun hasNext(): Boolean = i < obj
             override fun next(): Any {
                 i += BigDecimal.ONE
                 return i
@@ -44,34 +44,19 @@ fun compress(obj: Any): Any {
     return if (compressed.length < s.length) "@$compressed\"" else "\"$s\""
 }
 
-fun eor(obj: Any): Any {
-    when (obj) {
-        is BigDecimal -> {
-            return object : Iterator<Any> {
-                private var i = BigDecimal.ONE.negate()
-                override fun hasNext(): Boolean = i < obj
-                override fun next(): Any {
-                    i += BigDecimal.ONE
-                    return i
-                }
-            }.lazy()
-        }
-        is LazyList -> {
-            if (obj.isEmpty()) {
-                return obj
+fun ezr(obj: Any): Any {
+    return when (obj) {
+        is BigDecimal -> object : Iterator<Any> {
+            private var i = BigDecimal.ZERO
+            override fun hasNext(): Boolean = i < obj
+            override fun next(): Any {
+                val ret = i
+                i += BigDecimal.ONE
+                return ret
             }
-            return object : Iterator<Any> {
-                private var it = obj.iterator()
-                override fun hasNext(): Boolean = true
-                override fun next(): Any {
-                    if (!it.hasNext()) {
-                        it = obj.iterator()
-                    }
-                    return it.next()
-                }
-            }.lazy()
-        }
-        else -> return obj
+        }.lazy()
+        is LazyList -> obj.reduceOrNull(::multiply) ?: BigDecimal.ZERO
+        else -> obj
     }
 }
 
@@ -180,6 +165,42 @@ fun index(a: Any, b: Any): Any {
 
 fun input(): Any = Interpreter.inputSource.getInput()
 
+fun interleave(a: Any, b: Any): Any {
+    class Interleave(val aIt: Iterator<Any>, val bIt: Iterator<Any>) : Iterator<Any> {
+        var current = aIt
+        var isA = true
+        override fun hasNext(): Boolean = current.hasNext()
+        override fun next(): Any {
+            val next = current.next()
+            current = if (isA) bIt else aIt
+            isA = !isA
+            return next
+        }
+    }
+
+    if (a is LazyList) {
+        return Interleave(a.iterator(), listify(b).iterator()).lazy()
+    } else if (b is LazyList) {
+        return Interleave(listify(a).iterator(), b.iterator()).lazy()
+    } else if (a is String && b is String) {
+        val aIt = a.iterator()
+        val bIt = b.iterator()
+        var current = aIt
+        var isA = true
+        return buildString {
+            while (current.hasNext()) {
+                append(current.next())
+                current = if (isA) bIt else aIt
+                isA = !isA
+            }
+        }
+    } else if (a is BigDecimal && b is BigDecimal) {
+        return interleave(a.stringify(), b.stringify()).toString().toBigDecimal()
+    } else {
+        return a
+    }
+}
+
 fun isFunction(obj: Any): Any = (obj is CallableFunction).toBigDecimal()
 
 fun isList(obj: Any): Any = (obj is LazyList).toBigDecimal()
@@ -212,6 +233,16 @@ fun map(a: Any, b: Any): Any {
         return listify(arg).map(f::call).toType(arg::class)
     }
     return a
+}
+
+fun multiply(a: Any, b: Any): Any {
+    val o = vectorise(::multiply, a, b)
+    if (o != null) return o
+    if (a is BigDecimal && b is BigDecimal) {
+        return a * b
+    }
+    val repeatArgs = sortTypesDyadic<String, BigDecimal>(a, b)
+    return repeatArgs?.first?.repeat(repeatArgs.second.toInt()) ?: a
 }
 
 fun negate(obj: Any): Any {
@@ -282,6 +313,25 @@ fun println(obj: Any): Any {
 
 fun programInput(): Any = Interpreter.programInput.getInput()
 
+fun reduce(a: Any, b: Any): Any {
+    val reduceArgs = sortTypesDyadic<Any, CallableFunction>(a, b)
+    if (reduceArgs != null) {
+        val (arg, f) = reduceArgs
+        return listify(arg).reduceOrNull { acc, any -> f.call(acc, any) } ?: BigDecimal.ZERO
+    } else if (a is BigDecimal && b is BigDecimal) {
+        return object : Iterator<Any> {
+            private var i = a - BigDecimal.ONE
+            override fun hasNext(): Boolean = i < b
+            override fun next(): Any {
+                i += BigDecimal.ONE
+                return i
+            }
+        }.lazy()
+    } else {
+        return a
+    }
+}
+
 fun remove(a: Any, b: Any): Any {
     if (a is String && b is String) {
         return a + b.substring(a.length)
@@ -301,6 +351,16 @@ fun sort(obj: Any): Any {
         is BigDecimal -> obj.applyOnParts { sort(it).asString() }
         is String -> String(obj.toCharArray().sortedArray())
         else -> obj
+    }
+}
+
+fun subtract(a: Any, b: Any): Any {
+    val o = vectorise(::subtract, a, b)
+    if (o != null) return o
+    return if (a is BigDecimal && b is BigDecimal) {
+        a - b
+    } else {
+        b.asString().replace(a.asString(), "")
     }
 }
 

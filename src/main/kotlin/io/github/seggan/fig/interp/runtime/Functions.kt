@@ -38,9 +38,12 @@ fun countIns(node: OpNode): Int {
 }
 
 class FigFunction(val body: Node, arity: Int = if (body is OpNode) countIns(body) else 0) : CallableFunction(arity) {
-
     override fun callImpl(inputSource: InputSource): Any {
         Interpreter.visit(body)
         return Interpreter.value
+    }
+
+    override fun toString(): String {
+        return body.toString()
     }
 }

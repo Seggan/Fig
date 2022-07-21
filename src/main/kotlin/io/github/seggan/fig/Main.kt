@@ -30,7 +30,8 @@ fun main(args: Array<String>) {
             val lexed = Lexer.lex(code)
             val parser = Parser(lexed)
             val ast = parser.parse()
-            Interpreter.interpret(ast, args.drop(2).toList())
+            println(ast)
+            //Interpreter.interpret(ast, args.drop(2).toList())
         }
         "execute" -> {
             val code = readSource(File(args[1]).readBytes())
@@ -40,7 +41,7 @@ fun main(args: Array<String>) {
             Interpreter.interpret(ast, args.drop(2).toList())
         }
         "format" -> {
-            val code = File(args[1]).readText()
+            val code = File(args[1]).readText().replace("\r", "")
             val result = StringBuilder("# [Fig](https://github.com/Seggan/Fig), ")
             if (code.any { it !in CODEPAGE }) {
                 result.append(code.length)

@@ -45,14 +45,14 @@ enum class Operator(val symbol: String, val arity: Int = -2, val lazy: Boolean =
     ODD("O", 1),
     TODO_16("P"),
     LAST_RETURN_VALUE("Q", 0),
-    REDUCE("R"),
+    REDUCE("R", 2),
     SUM("S", 1),
     TODO_20("T"),
     TODO_21("U"),
     TODO_22("V"),
     TODO_23("W"),
     THIS_FUNCTION("X", 0),
-    TODO_25("Y"),
+    INTERLEAVE("Y", 2),
     TODO_26("Z"),
     TODO_27("["),
     // \ is char
@@ -99,4 +99,19 @@ enum class Operator(val symbol: String, val arity: Int = -2, val lazy: Boolean =
 
 val CONSTANTS = buildMap<String, Any> {
     put("cH", "Hello, World!")
+    put("cA", "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    put("ca", "abcdefghijklmnopqrstuvwxyz")
+    put("cB", "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
+    put("cC", "BCDFGHJKLMNPQRSTVWXZ")
+    put("cc", "bcdfghjklmnpqrstvwxz")
+    put("cb", "BCDFGHJKLMNPQRSTVWXZbcdfghjklmnpqrstvwxz")
+    put("cV", "AEIOU")
+    put("cv", "aeiou")
+    put("cO", "AEIOUaeiou")
+    put("cY", "AEIOUY")
+    put("cy", "aeiouy")
+    put("co", "AEIOUYaeiouy")
+    put("cD", "0123456789")
+    put("cN", "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
+    put("cn", "\n")
 }.toMap()

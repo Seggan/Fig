@@ -8,11 +8,13 @@ class Parser(tokens: List<Token>) {
 
     private val iterator = tokens.listIterator()
 
+    private var isEnding = false
+
     fun parse(): List<Node> {
         val result = mutableListOf<Node>()
         while (iterator.hasNext()) {
-            val token = iterator.next()
-            result.add(parseToken(token))
+            isEnding = false
+            result.add(parseToken(iterator.next()))
         }
         return result
     }
@@ -21,7 +23,11 @@ class Parser(tokens: List<Token>) {
         return when (token.type) {
             TokenType.STRING -> ConstantNode(token.value)
             TokenType.NUMBER -> ConstantNode(token.value.toBigDecimal())
-            TokenType.FUNCTION_REFERENCE -> ConstantNode(FigFunction(parseToken(iterator.next()))) { "'$it" }
+            TokenType.FUNCTION_REFERENCE -> {
+                val node = ConstantNode(FigFunction(parseToken(iterator.next()))) { "'$it" }
+                isEnding = false
+                node
+            }
             TokenType.LOOP -> {
                 val body = mutableListOf<Node>()
                 while (iterator.hasNext()) {
@@ -76,15 +82,16 @@ class Parser(tokens: List<Token>) {
                 }
             }
         } else {
-            for (i in 0 until op.arity) {
-                if (!iterator.hasNext()) {
+            var i = 0
+            while (i < op.arity) {
+                if (!iterator.hasNext() || isEnding) {
                     for (j in 0 until (op.arity - i)) {
                         args.add(OpNode(Operator.INPUT))
                     }
                     break
                 } else {
                     val token = iterator.next()
-                    if (token.type == TokenType.CLOSER) {
+                    if (token.type == TokenType.CLOSER || isEnding) {
                         for (j in 0 until (op.arity - i)) {
                             args.add(OpNode(Operator.INPUT))
                         }
@@ -93,10 +100,12 @@ class Parser(tokens: List<Token>) {
                         when (token.type) {
                             TokenType.UNPACK -> args.add(UnpackNode(parseToken(iterator.next())))
                             TokenType.UNPACK_BULK -> args.add(UnpackBulkNode(parseToken(iterator.next())))
+                            TokenType.END_FUNCTION -> isEnding = i-- > -1 // setting it to true. don't try this at home
                             else -> args.add(parseToken(token))
                         }
                     }
                 }
+                i++
             }
         }
         return OpNode(op, *args.toTypedArray())
