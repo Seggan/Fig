@@ -55,7 +55,7 @@ fun ezr(obj: Any): Any {
                 return ret
             }
         }.lazy()
-        is LazyList -> obj.reduceOrNull(::multiply) ?: BigDecimal.ZERO
+        is LazyList -> obj.reduceOrNull(::multiply) ?: BigDecimal.ONE
         else -> obj
     }
 }
