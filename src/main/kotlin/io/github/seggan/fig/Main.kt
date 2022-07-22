@@ -30,8 +30,7 @@ fun main(args: Array<String>) {
             val lexed = Lexer.lex(code)
             val parser = Parser(lexed)
             val ast = parser.parse()
-            println(ast)
-            //Interpreter.interpret(ast, args.drop(2).toList())
+            Interpreter.interpret(ast, args.drop(2).toList())
         }
         "execute" -> {
             val code = readSource(File(args[1]).readBytes())
