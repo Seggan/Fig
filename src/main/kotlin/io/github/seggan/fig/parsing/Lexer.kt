@@ -43,7 +43,7 @@ object Lexer {
                 tokens.add(Token(TokenType.STRING, result))
             } else if (c == '\\') {
                 tokens.add(Token(TokenType.STRING, input[i++].toString()))
-            } else if (c == '@') {
+            } else if (c == 'D') {
                 val result = buildString {
                     while (i < input.length) {
                         val char = input[i++]
@@ -72,18 +72,29 @@ object Lexer {
                 tokens.add(Token(TokenType.NUMBER, result.toString()))
             } else if (c == '\\') {
                 tokens.add(Token(TokenType.STRING, input[i++].toString()))
-            } else {
-                val type = when (c) {
-                    '(' -> TokenType.LOOP
-                    ')' -> TokenType.CLOSER
-                    '\'' -> TokenType.FUNCTION_REFERENCE
-                    'D' -> TokenType.DEFINITION
-                    'U' -> TokenType.UNPACK_BULK
-                    'u' -> TokenType.UNPACK
-                    '\n' -> TokenType.END_FUNCTION
-                    else -> TokenType.OPERATOR
+            } else if (c == '#' && input[i] == ' ') {
+                while (i < input.length) {
+                    val char = input[i++]
+                    if (char == '\n') {
+                        break
+                    }
                 }
-                tokens.add(Token(type, c.toString() + (if (c in "cm#") input[i++] else "")))
+            } else {
+                if (c in "cm#") {
+                    tokens.add(Token(TokenType.OPERATOR, c.toString() + input[i++]))
+                } else {
+                    val type = when (c) {
+                        '(' -> TokenType.LOOP
+                        ')' -> TokenType.CLOSER
+                        '\'' -> TokenType.FUNCTION_REFERENCE
+                        '@' -> TokenType.OPERATOR_REFERENCE
+                        'U' -> TokenType.UNPACK_BULK
+                        'u' -> TokenType.UNPACK
+                        '\n' -> TokenType.END_FUNCTION
+                        else -> TokenType.OPERATOR
+                    }
+                    tokens.add(Token(type, c.toString()))
+                }
             }
         }
         return tokens
@@ -99,7 +110,7 @@ enum class TokenType {
     CLOSER,
     LOOP,
     FUNCTION_REFERENCE,
-    DEFINITION,
+    OPERATOR_REFERENCE,
     UNPACK_BULK,
     UNPACK,
     END_FUNCTION

@@ -38,6 +38,48 @@ fun any(obj: Any): Any {
     }
 }
 
+fun applyOnEvery(a: Any, b: Any, c: Any): Any {
+    val args = sortTypesTriadic<Any, BigDecimal, CallableFunction>(a, b, c)
+    if (args != null) {
+        val (obj, i, func) = args
+        val indexes = i.toInt()
+        return when (obj) {
+            is String -> obj.mapIndexed { index, char ->
+                if (index % indexes == 0 && index != 0) {
+                    func.call(char.toString())
+                } else {
+                    char
+                }
+            }
+            is BigDecimal -> obj.applyOnParts {
+                it.toDigits()
+                    .mapIndexed { index, digit ->
+                        if (index % indexes == 0 && index != 0) {
+                            func.call(digit)
+                        } else {
+                            digit
+                        }
+                    }
+                    .joinByNothing()
+            }
+            else -> {
+                val list = listify(obj)
+                var index = 0
+                return list.map {
+                    // we don't wanna short circuit the condition, as the ++ won't be executed if the condition is false
+                    if ((index != 0) and (index++ % indexes == 0)) {
+                        func.call(it)
+                    } else {
+                        it
+                    }
+                }
+            }
+        }
+    } else {
+        return a
+    }
+}
+
 fun compress(obj: Any): Any {
     val s = obj.asString()
     val compressed = compress(s, COMPRESSION_CODEPAGE, COMPRESSABLE_CHARS, DICTIONARY)
@@ -73,6 +115,8 @@ private fun equalImpl(a: Any, b: Any): Boolean {
     val intStr = sortTypesDyadic<BigDecimal, String>(a, b)
     if (intStr != null) {
         return intStr.first.stringify() == intStr.second
+    } else if (a is String && b is String) {
+        return a == b
     } else if (a is BigDecimal && b is BigDecimal) {
         return a.compareTo(b) == 0
     } else if (a is LazyList && b is LazyList) {
@@ -224,15 +268,15 @@ fun map(a: Any, b: Any): Any {
         val (arg, f) = mapArgs
         if (arg is BigDecimal) {
             return arg.applyOnParts {
-                it.map { c -> c - '0' }
-                    .map(Int::toBigDecimal)
+                it.toDigits()
                     .map(f::call)
                     .joinByNothing()
             }
         }
         return listify(arg).map(f::call).toType(arg::class)
+    } else {
+        return listify(b).map { a }.toType(b::class)
     }
-    return a
 }
 
 fun multiply(a: Any, b: Any): Any {
@@ -285,8 +329,7 @@ fun power(a: Any, b: Any): Any {
         val (arg, f) = sortArgs
         if (arg is BigDecimal) {
             return arg.applyOnParts {
-                it.map { c -> c - '0' }
-                    .map(Int::toBigDecimal)
+                it.toDigits()
                     .sortedBy { a -> numify(f.call(a)) }
                     .joinByNothing()
             }
@@ -397,6 +440,13 @@ fun thisFunction(): Any = Interpreter.functionStack.first()
 fun toBinary(obj: Any): Any {
     val o = vectorise(::toBinary, obj)
     if (o != null) return o
+    if (obj is String) {
+        return if (obj.length == 1) {
+            obj[0].isLetter().toBigDecimal()
+        } else {
+            obj.map(Char::isLetter).map(Boolean::toBigDecimal).lazy()
+        }
+    }
     return toBase(numify(obj).toBigInteger(), 2).map(Int::toBigDecimal).lazy()
 }
 
@@ -404,7 +454,7 @@ fun vectoriseOn(a: Any): Any {
     val op = a as OpNode
     val input = op.input.toMutableList()
     input[input.size - 1] = OpNode(Operator.INPUT)
-    val f = FigFunction(OpNode(op.operator, *input.toTypedArray()))
+    val f = FigFunction(OpNode(op.operator, input))
     return map(f, Interpreter.execute(op.input.last()))
 }
 

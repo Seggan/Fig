@@ -1,5 +1,9 @@
 package io.github.seggan.fig.interp
 
+import io.github.seggan.fig.interp.runtime.LazyList
+import io.github.seggan.fig.interp.runtime.lazy
+import java.math.BigDecimal
+
 /**
  * @param symbol symbol of the operator
  * @param arity arity of the operator. -1 is variadic, -2 is unassigned
@@ -26,12 +30,12 @@ enum class Operator(val symbol: String, val arity: Int = -2, val lazy: Boolean =
     EQUAL("=", 2),
     GREATER_THAN(">", 2),
     IF_STATEMENT("?", 2, true),
-    // @ is compressed string
-    COMPRESS("#@", 1),
+    // @ is operator ref
     ALL("A", 1),
     FROM_BINARY("B", 1),
     CHR_ORD("C", 1),
-    // D is function definition
+    // D is compressed string
+    COMPRESS("#D", 1),
     TODO_8("E"),
     FILTER("F", 2),
     GENERATE("G", 2),
@@ -75,7 +79,7 @@ enum class Operator(val symbol: String, val arity: Int = -2, val lazy: Boolean =
     TODO_40("l"),
     IS_LIST("#l", 1),
     // m is a digraph char
-    TODO_41("n"),
+    APPLY_ON_EVERY("n", 3),
     IS_NUMBER("#n", 1),
     REMOVE("o", 2),
     TODO_43("p"),
@@ -114,4 +118,11 @@ val CONSTANTS = buildMap<String, Any> {
     put("cD", "0123456789")
     put("cN", "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
     put("cn", "\n")
+
+    put("mC", numbersStartingWith(BigDecimal.ONE))
+    put("mW", numbersStartingWith(BigDecimal.ZERO))
 }.toMap()
+
+private fun numbersStartingWith(start: BigDecimal): LazyList {
+    return generateSequence(start) { it + BigDecimal.ONE }.lazy()
+}

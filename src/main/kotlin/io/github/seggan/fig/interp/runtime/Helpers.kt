@@ -218,6 +218,27 @@ inline fun <reified F, reified S> sortTypesDyadic(a: Any, b: Any): Pair<F, S>? {
     }
 }
 
+inline fun <reified F, reified S, reified T> sortTypesTriadic(a: Any, b: Any, c: Any): Triple<F, S, T>? {
+    val fClass = F::class.java
+    val sClass = S::class.java
+    val tClass = T::class.java
+    return if (fClass.isInstance(a) && sClass.isInstance(b) && tClass.isInstance(c)) {
+        Triple(a as F, b as S, c as T)
+    } else if (fClass.isInstance(a) && sClass.isInstance(c) && tClass.isInstance(b)) {
+        Triple(a as F, c as S, b as T)
+    } else if (fClass.isInstance(b) && sClass.isInstance(a) && tClass.isInstance(c)) {
+        Triple(b as F, a as S, c as T)
+    } else if (fClass.isInstance(b) && sClass.isInstance(c) && tClass.isInstance(a)) {
+        Triple(b as F, c as S, a as T)
+    } else if (fClass.isInstance(c) && sClass.isInstance(a) && tClass.isInstance(b)) {
+        Triple(c as F, a as S, b as T)
+    } else if (fClass.isInstance(c) && sClass.isInstance(b) && tClass.isInstance(a)) {
+        Triple(c as F, b as S, a as T)
+    } else {
+        null
+    }
+}
+
 fun truthiness(obj: Any): Boolean {
     return when (obj) {
         is BigDecimal -> obj != BigDecimal.ZERO
@@ -268,6 +289,15 @@ fun BigDecimal.stringify(): String = this.stripTrailingZeros().toPlainString()
 inline fun BigDecimal.applyOnParts(crossinline mappingFunction: (String) -> Any): BigDecimal {
     val split = stringify().split('.')
     return split.map(mappingFunction).joinToString(".", transform = Any::asString).toBigDecimal()
+}
+
+inline fun BigDecimal.applyOnDigits(crossinline mappingFunction: (BigDecimal) -> Any): BigDecimal {
+    val split = stringify().split('.')
+    return split.joinToString(".") { it.map { c -> c.toString().toBigDecimal() }.map(mappingFunction).joinByNothing() }.toBigDecimal()
+}
+
+fun String.toDigits(): List<BigDecimal> {
+    return this.map { it - '0' }.map(Int::toBigDecimal)
 }
 
 /**

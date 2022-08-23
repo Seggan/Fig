@@ -1,8 +1,11 @@
 package io.github.seggan.fig.parsing
 
+import ch.obermuhlner.math.big.BigDecimalMath
 import io.github.seggan.fig.interp.CONSTANTS
 import io.github.seggan.fig.interp.Operator
 import io.github.seggan.fig.interp.runtime.FigFunction
+import java.math.BigDecimal
+import java.math.MathContext
 
 class Parser(tokens: List<Token>) {
 
@@ -28,6 +31,14 @@ class Parser(tokens: List<Token>) {
                 isEnding = false
                 node
             }
+            TokenType.OPERATOR_REFERENCE -> {
+                val next = iterator.next()
+                if (next.type == TokenType.NUMBER) {
+                    return ConstantNode(BigDecimalMath.pow(BigDecimal.TEN, next.value.toBigDecimal(), MathContext.DECIMAL128)) { "'$it" }
+                }
+                val operator = Operator.values().find { it.symbol == next.value }!!
+                ConstantNode(FigFunction(OpNode(operator, List(operator.arity) { OpNode(Operator.INPUT) }))) { "@$it" }
+            }
             TokenType.LOOP -> {
                 val body = mutableListOf<Node>()
                 while (iterator.hasNext()) {
@@ -41,13 +52,7 @@ class Parser(tokens: List<Token>) {
                 LoopNode(body)
             }
             TokenType.OPERATOR -> {
-                var operator: Operator? = null
-                for (op in Operator.values()) {
-                    if (op.symbol == token.value) {
-                        operator = op
-                        break
-                    }
-                }
+                val operator = Operator.values().find { it.symbol == token.value }
                 if (operator == null) {
                     for ((op, v) in CONSTANTS.entries) {
                         if (op == token.value) {
@@ -108,6 +113,6 @@ class Parser(tokens: List<Token>) {
                 i++
             }
         }
-        return OpNode(op, *args.toTypedArray())
+        return OpNode(op, args)
     }
 }

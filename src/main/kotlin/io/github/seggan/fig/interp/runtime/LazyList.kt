@@ -93,5 +93,8 @@ class LazyList(private val generator: Iterator<Any>) : AbstractCollection<Any>()
 
 fun Iterable<Any>.lazy(): LazyList = LazyList(this.iterator())
 fun Iterator<Any>.lazy(): LazyList = LazyList(this)
+
+fun Sequence<Any>.lazy(): LazyList = LazyList(this)
+
 fun lazy(vararg elements: Any): LazyList = LazyList(elements.iterator())
 fun lazy(seqGen: suspend SequenceScope<Any>.() -> Unit): LazyList = LazyList(sequence(seqGen))

@@ -36,7 +36,10 @@ object Interpreter {
             }
         })
         visit(ast)
-        figPrint(value)
+        val last = ast.lastOrNull()
+        if (!(last is OpNode && (last.operator == Operator.PRINTLN || last.operator == Operator.PRINT_NO_NL))) {
+            figPrint(value)
+        }
     }
 
     fun visit(node: Node) {

@@ -14,7 +14,7 @@ class ConstantNode(private val obj: Any, private val stringify: (Any) -> String 
     override fun accept(visitor: Interpreter) = visitor.visitConstant(obj)
 }
 
-class OpNode(val operator: Operator, vararg val input: Node) : Node() {
+class OpNode(val operator: Operator, val input: List<Node> = emptyList()) : Node() {
     override fun toString(): String {
         val symbol = operator.symbol
         return if (input.isEmpty()) {
