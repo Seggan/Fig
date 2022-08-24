@@ -1,9 +1,9 @@
 (defproject fig "0.1.0-SNAPSHOT"
   :description "A functional golfing language"
   :url "http://github.com/Seggan/Fig"
-  :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
-            :url "https://www.eclipse.org/legal/epl-2.0/"}
-  :dependencies [[org.clojure/clojure "1.10.3"]]
+  :license {:name "Apache License 2.0"
+            :url "http://www.apache.org/licenses/LICENSE-2.0.html"}
+  :dependencies [[org.clojure/clojure "1.10.3"] [ch.obermuhlner/big-math "2.3.0"]]
   :main ^:skip-aot fig.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all

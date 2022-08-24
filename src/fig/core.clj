@@ -5,4 +5,4 @@
 (defn -main
   [& args]
   (let [code (slurp (first args))]
-    (println (parsing/lex code))))
+    (println (parsing/parse (parsing/lex code)))))
