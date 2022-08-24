@@ -1,4 +1,6 @@
 /.gradle
 /.idea
+/target
 /build
+*.iml
 test.txt
