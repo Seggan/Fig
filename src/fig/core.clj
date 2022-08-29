@@ -1,6 +1,6 @@
 (ns fig.core
   (:gen-class)
-  (:require [fig.interp :as interp]
+  (:require [fig.impl :as interp]
             [fig.parsing :as parsing]))
 
 (defn -main

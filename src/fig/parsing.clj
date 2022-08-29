@@ -1,6 +1,7 @@
 (ns fig.parsing
   (:require [clojure.string :as str]
-            [fig.ops :as ops]))
+            [fig.compression :as compression]
+            [fig.impl :as ops]))
 
 (def ^:private tokenMap {")"  :closer
                          "'"  :functionRef
@@ -29,6 +30,13 @@
                          (swap! i inc))
                        (swap! tokens conj (list :string @string))
                        (swap! i inc))
+          (= c "D") (let [string (atom "")]
+                      (while (and (< @i (count input))
+                                  (not= (get input @i) \"))
+                        (swap! string str (get input @i))
+                        (swap! i inc))
+                      (swap! tokens conj (list :string (compression/decompress @string)))
+                      (swap! i inc))
           (str/includes? "123456789." c) (let [n (atom (str c))]
                                            (while (and (str/includes? "0123456789." (str (get input @i)))
                                                        (< @i (count input)))
