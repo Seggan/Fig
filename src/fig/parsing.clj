@@ -6,7 +6,7 @@
 (def ^:private tokenMap {")"  :closer
                          "'"  :functionRef
                          "@"  :operatorRef
-                         "U"  :unpack
+                         "u"  :unpack
                          "\n" :endFunction})
 
 (defn- whereValue [pred map] (-> #(pred (second %)) (filter map) (first) (first)))
