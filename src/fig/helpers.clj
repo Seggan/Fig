@@ -1,9 +1,8 @@
 (ns fig.helpers
   (:require [clojure.edn :as edn]
-            [clojure.string :as str]
-            [clojure.test :as test]))
+            [clojure.string :as str]))
 
-(defn applyIf [pred f x] (if (pred x) (f x) x))
+(defn append [coll & stuff] (lazy-cat coll stuff))
 
 (defn applyOnParts [f num] (edn/read-string (str/join \. (map f (str/split (str num) #"\.")))))
 
@@ -11,6 +10,21 @@
                  (or (coll? x) (string? x)) (boolean (seq x))
                  (number? x) (not (== x 0))
                  :else (boolean x)))
+
+(defn cmp [a b] (cond
+                  (and (number? a) (number? b)) (compare a b)
+                  (and (coll? a) (coll? b)) (let [aIt (.iterator a)
+                                                  bIt (.iterator b)]
+                                              (loop []
+                                                (if (.hasNext aIt)
+                                                  (if (.hasNext bIt)
+                                                    (let [cmpResult (cmp (.next aIt) (.next bIt))]
+                                                      (if (= cmpResult 0)
+                                                        (recur)
+                                                        cmpResult))
+                                                    1)
+                                                  (if (.hasNext bIt) -1 0))))
+                  :else (compare a b)))
 
 (defmacro const [x] `(fn [] ~x))
 
@@ -32,24 +46,34 @@
                                     false)))
     :else (= a b)))
 
-(defn figPrint
-  ([obj] (figPrint obj "\n"))
+(defn printF
+  ([obj] (printF obj "\n"))
   ([obj end]
    (if (sequential? obj)
      (do
        (print \[)
        (let [it (.iterator obj)]
          (while (.hasNext it)
-           (figPrint (.next it) nil)
+           (printF (.next it) nil)
            (when (.hasNext it)
              (print ", "))))
        (print \]))
      (print (str obj)))
-   (when (some? end) (print end))))
+   (when (some? end) (print end))
+   obj))
 
 (defmacro matchPreds [x & exprs] `(condp apply [~x] ~@exprs))
 
-(defn putFunctionFirst [a b] (if (test/function? a) (list a b) (list b a)))
+(defn listify [x] (matchPreds x
+                              coll? x
+                              string? (map str x)
+                              number? (range 0 x)
+                              x))
+
+(defn sortTypesDyadic [t1 t2 a b] (cond
+                                    (and (t1 a) (t2 b)) (list a b)
+                                    (and (t1 b) (t2 a)) (list b a)
+                                    :else nil))
 
 (defn strmap [f s] (clojure.string/join (map f (str s))))
 

@@ -74,11 +74,11 @@
       (= tokenType :functionRef) (do
                                    (reset! isEnding false)
                                    (list :functionRef (parseToken (consume tokens) tokens)))
-      (= tokenType :operatorRef) (let [op (consume tokens)]
+      (= tokenType :operatorRef) (let [op (second (consume tokens))]
                                    (list :functionRef (list op (repeat (ops/attr op :arity) (list :input)))))
-      (= tokenType :endFunction) (reset! isEnding true)
+      (= tokenType :endFunction) (do (reset! isEnding true) :nop)
       (nil? tokenType) (throw "Unexpected end of input")
-      :else (recur (consume tokens) tokens))))
+      :else :nop)))
 
 (defn- parseOperator [token tokens]
   (let [op (second token)

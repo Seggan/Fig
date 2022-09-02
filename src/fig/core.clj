@@ -10,4 +10,4 @@
     (println lexed)
     (let [parsed (parsing/parse lexed)]
       (println parsed)
-      (fig.helpers/figPrint (interp/interpretProgram parsed (rest args))))))
+      (fig.helpers/printF (interp/interpretProgram parsed (rest args))))))
