@@ -4,12 +4,18 @@
 
 (defn append [coll & stuff] (lazy-cat coll stuff))
 
-(defn applyOnParts [f num] (edn/read-string (str/join \. (map f (str/split (str num) #"\.")))))
+(defn applyOnParts [f num] (->> (str/split (str num) #"\.")
+                                (map f)
+                                (map #(if (sequential? %) (str/join (flatten %)) %))
+                                (str/join \.)
+                                (edn/read-string)))
 
 (defn bool [x] (cond
                  (or (coll? x) (string? x)) (boolean (seq x))
                  (number? x) (not (== x 0))
                  :else (boolean x)))
+
+(defn collContains [coll x] (some #(if (and (number? x) (number? %)) (== x %) (= x %)) coll))
 
 (defn cmp [a b] (cond
                   (and (number? a) (number? b)) (compare a b)
@@ -27,6 +33,8 @@
                   :else (compare a b)))
 
 (defmacro const [x] `(fn [] ~x))
+
+(defn digits [x] (map #(- (int %) (int \0)) (filter #{\0 \1 \2 \3 \4 \5 \6 \7 \8 \9} (str x))))
 
 (defn elvis [x default] (if (nil? x) default x))
 
@@ -62,20 +70,37 @@
    (when (some? end) (print end))
    obj))
 
-(defmacro matchPreds [x & exprs] `(condp apply [~x] ~@exprs))
+(defmacro matchp [x & exprs] `(condp apply [~x] ~@exprs))
 
-(defn listify [x] (matchPreds x
-                              coll? x
-                              string? (map str x)
-                              number? (range 0 x)
-                              x))
+(defn listify [x] (matchp x
+                          coll? x
+                          string? (map str x)
+                          number? (digits x)
+                          x))
 
 (defn sortTypesDyadic [t1 t2 a b] (cond
                                     (and (t1 a) (t2 b)) (list a b)
                                     (and (t1 b) (t2 a)) (list b a)
                                     :else nil))
 
-(defn strmap [f s] (clojure.string/join (map f (str s))))
+(defn sortTypesTriadic [t1 t2 t3 a b c] (cond
+                                          (and (t1 a) (t2 b) (t3 c)) (list a b c)
+                                          (and (t1 a) (t2 c) (t3 b)) (list a c b)
+                                          (and (t1 b) (t2 a) (t3 c)) (list b a c)
+                                          (and (t1 b) (t2 c) (t3 a)) (list b c a)
+                                          (and (t1 c) (t2 a) (t3 b)) (list c a b)
+                                          (and (t1 c) (t2 b) (t3 a)) (list c b a)
+                                          :else nil))
+
+(defn strmap [f s] (str/join (map f (str s))))
+
+(defn strmapstr [f s] (str/join (map f (listify s))))
+
+(defmacro tempAtomValue [var value code] `(let [~'oldValue (deref ~var)]
+                                            (reset! ~var ~value)
+                                            (let [~'result ~code]
+                                              (reset! ~var ~'oldValue)
+                                              ~'result)))
 
 (defmacro vectorise
   ([this arg else] `(if (sequential? ~arg) (map ~this ~arg) ~else))
