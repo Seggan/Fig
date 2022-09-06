@@ -3,7 +3,8 @@
   (:require [clojure.string :as str]
             [fig.impl :as interp]
             [fig.parsing :as parsing])
-  (:use [fig.compression :only [codepage]])
+  (:use [fig.compression :only [codepage]]
+        [fig.helpers :only [evalString]])
   (:import (ch.obermuhlner.math.big BigDecimalMath)
            (java.awt Toolkit)
            (java.awt.datatransfer StringSelection)
@@ -33,5 +34,5 @@
                                                 (when (= "debugRun" mode) (println lexed))
                                                 (let [parsed (parsing/parse lexed)]
                                                   (when (= "debugRun" mode) (println parsed))
-                                                  (fig.helpers/printF (interp/interpretProgram parsed (rest args)))))
+                                                  (fig.helpers/printF (interp/interpretProgram parsed (map evalString (rest args))))))
       :else (println "Usage: fig <mode> <file> [args...]"))))
