@@ -78,19 +78,21 @@
                           number? (digits x)
                           x))
 
-(defn sortTypesDyadic [t1 t2 a b] (cond
-                                    (and (t1 a) (t2 b)) (list a b)
-                                    (and (t1 b) (t2 a)) (list b a)
-                                    :else nil))
+(defn numify [x] (if (number? x) x (count x)))
 
-(defn sortTypesTriadic [t1 t2 t3 a b c] (cond
-                                          (and (t1 a) (t2 b) (t3 c)) (list a b c)
-                                          (and (t1 a) (t2 c) (t3 b)) (list a c b)
-                                          (and (t1 b) (t2 a) (t3 c)) (list b a c)
-                                          (and (t1 b) (t2 c) (t3 a)) (list b c a)
-                                          (and (t1 c) (t2 a) (t3 b)) (list c a b)
-                                          (and (t1 c) (t2 b) (t3 a)) (list c b a)
-                                          :else nil))
+(defn sortTypes
+  ([t1 t2 a b] (cond
+                 (and (t1 a) (t2 b)) (list a b)
+                 (and (t1 b) (t2 a)) (list b a)
+                 :else nil))
+  ([t1 t2 t3 a b c] (cond
+                      (and (t1 a) (t2 b) (t3 c)) (list a b c)
+                      (and (t1 a) (t2 c) (t3 b)) (list a c b)
+                      (and (t1 b) (t2 a) (t3 c)) (list b a c)
+                      (and (t1 b) (t2 c) (t3 a)) (list b c a)
+                      (and (t1 c) (t2 a) (t3 b)) (list c a b)
+                      (and (t1 c) (t2 b) (t3 a)) (list c b a)
+                      :else nil)))
 
 (defn strmap [f s] (str/join (map f (str s))))
 
