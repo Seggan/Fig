@@ -1,5 +1,6 @@
 (ns fig.helpers
   (:require [clojure.edn :as edn]
+            [clojure.math.numeric-tower :as math]
             [clojure.string :as str]))
 
 (defn append [coll & stuff] (lazy-cat coll stuff))
@@ -54,20 +55,25 @@
                                     false)))
     :else (= a b)))
 
+(defn fromBase [n base] (let [res (reduce #(+' (*' %1 base) %2) (cons (math/abs (first n)) (rest n)))]
+                          (if (neg? (first n)) (-' res) res)))
+
 (defn printF
   ([obj] (printF obj "\n"))
   ([obj end]
    (if (sequential? obj)
      (do
        (print \[)
-       (let [it (.iterator obj)]
-         (while (.hasNext it)
-           (printF (.next it) nil)
-           (when (.hasNext it)
-             (print ", "))))
+       (loop [coll (seq obj)]
+         (when coll
+           (printF (first coll))
+           (when (next coll)
+               (print ", ")
+               (recur (next coll)))))
        (print \]))
      (print (str obj)))
    (when (some? end) (print end))
+   (flush)
    obj))
 
 (defmacro matchp [x & exprs] `(condp apply [~x] ~@exprs))
@@ -103,6 +109,13 @@
                                             (let [~'result ~code]
                                               (reset! ~var ~'oldValue)
                                               ~'result)))
+
+(defn toBase [n base]
+  (loop [ret (list)
+         i (math/abs n)]
+    (if (zero? i)
+      (if (and (neg? n) (seq ret)) (cons (-' (first ret)) (rest ret)) ret)
+      (recur (cons (mod i base) ret) (quot i base)))))
 
 (defmacro vectorise
   ([this arg else] `(if (sequential? ~arg) (map ~this ~arg) ~else))

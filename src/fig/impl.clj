@@ -345,6 +345,7 @@
                 :greaterThan     {:symbol ">" :arity 2 :impl #(if (> (cmp %1 %2) 0) 1 0)}
                 :binaryIf        {:symbol "?" :arity 2 :impl binaryIf :macro true}
                 :all             {:symbol "A" :arity 1 :impl all}
+                :fromBinary      {:symbol "B" :arity 1 :impl #(fromBase % 2)}
                 :chrOrd          {:symbol "C" :arity 1 :impl chrOrd}
                 :compress        {:symbol "#D" :arity 1 :impl compress}
                 :even            {:symbol "E" :arity 1 :impl even}
@@ -376,6 +377,7 @@
                 :floor           {:symbol "_" :arity 1 :impl floor}
                 :list            {:symbol "`" :arity -1 :impl vector}
                 :any             {:symbol "a" :arity 1 :impl any}
+                :toBinary        {:symbol "b" :arity 1 :impl #(toBase % 2)}
                 :vectoriseOn     {:symbol "e" :arity 1 :impl vectoriseOn :macro true}
                 :flatten         {:symbol "f" :arity 1 :impl #(if (sequential? %) (flatten %) (listify %))}
                 :min             {:symbol "g" :arity 2 :impl #(min-key cmp %1 %2)}
@@ -390,7 +392,7 @@
                 :remove          {:symbol "o" :arity 2 :impl removeF}
                 :rest            {:symbol "p" :arity 1 :impl #(if (string? %) (subs % 1) (rest (listify %)))}
                 :butlast         {:symbol "q" :arity 1 :impl butlastF}
-                :range           {:symbol "r" :arity 2 :impl #(if (sequential? %) (reduceF % multiply) (range %))}
+                :range           {:symbol "r" :arity 2 :impl #(if (sequential? %) (if (seq %) (reduceF % multiply) 1) (range %))}
                 :drop            {:symbol "s" :arity 2 :impl dropF}
                 :isString        {:symbol "#s" :arity 1 :impl #(if (string? %) 1 0)}
                 :take            {:symbol "t" :arity 2 :impl takeF}
@@ -402,7 +404,31 @@
                 :decrement       {:symbol "{" :arity 1 :impl dec'}
                 :bitOr           {:symbol "|" :arity 2 :impl bit-or}
                 :increment       {:symbol "}" :arity 1 :impl inc'}
-                :bitNot          {:symbol "~" :arity 1 :impl bit-not}})
+                :bitNot          {:symbol "~" :arity 1 :impl bit-not}
+
+                :uAlphabet       {:symbol "cA" :arity 0 :impl (const "ABCDEFGHIJKLMNOPQRSTUVWXYZ")}
+                :lAlphabet       {:symbol "ca" :arity 0 :impl (const "abcdefghijklmnopqrstuvwxyz")}
+                :bothAlphabets   {:symbol "cB" :arity 0 :impl (const "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")}
+                :bothConsonants  {:symbol "cb" :arity 0 :impl (const "BCDFGHJKLMNPQRSTVWXYZbcdfghjklmnpqrstvwxyz")}
+                :uConsonants     {:symbol "cC" :arity 0 :impl (const "BCDFGHJKLMNPQRSTVWXYZ")}
+                :lConsonants     {:symbol "cc" :arity 0 :impl (const "bcdfghjklmnpqrstvwxyz")}
+                :digits          {:symbol "cd" :arity 0 :impl (const "0123456789")}
+                :alphaAndDigits  {:symbol "cD" :arity 0 :impl (const "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")}
+                :newline         {:symbol "cn" :arity 0 :impl (const "\n")}
+                :bothVowels      {:symbol "cO" :arity 0 :impl (const "AEIOUaeiou")}
+                :bothVowelsWithY {:symbol "cY" :arity 0 :impl (const "AEIOUYaeiouy")}
+                :uVowels         {:symbol "cV" :arity 0 :impl (const "AEIOU")}
+                :lVowels         {:symbol "cv" :arity 0 :impl (const "aeiou")}
+                :uVowelsWithY    {:symbol "cY" :arity 0 :impl (const "AEIOUY")}
+                :lVowelsWithY    {:symbol "cy" :arity 0 :impl (const "aeiouy")}
+                :uReversedAlpha  {:symbol "cZ" :arity 0 :impl (const "ZYXWVUTSRQPONMLKJIHGFEDCBA")}
+                :lReversedAlpha  {:symbol "cz" :arity 0 :impl (const "zyxwvutsrqponmlkjihgfedcba")}
+
+                :eulersNumber    {:symbol "mE" :arity 0 :impl (const 2.71828182845904523536028747135266249775724709369995M)}
+                :phi             {:symbol "mG" :arity 0 :impl (const 1.61803398874989484820458683436563811772030917980576M)}
+                :pi              {:symbol "mP" :arity 0 :impl (const 3.14159265358979323846264338327950288419716939937510M)}
+                :countingNumbers {:symbol "mC" :arity 0 :impl (const (iterate inc' 1))}
+                :naturalNumbers  {:symbol "mN" :arity 0 :impl (const (iterate inc' 0))}})
 
 (defn attr [op attribute] (if (contains? operators op)
                             (get-in operators [op attribute])
