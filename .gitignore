@@ -1,4 +1,7 @@
 /.gradle
 /.idea
+/target
 /build
+*.iml
 test.txt
+.nrepl-port
