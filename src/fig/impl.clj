@@ -148,7 +148,7 @@
     :else a))
 
 (defn locate [a b] (matchp b
-                           sequential? (ffirst (filter #(equal (second %) a) (map-indexed vector b)))
+                           sequential? (elvis (ffirst (filter #(equal (second %) a) (map-indexed vector b))) -1)
                            string? (str/index-of b a)
                            a))
 
@@ -352,7 +352,7 @@
                 :filter          {:symbol "F" :arity 2 :impl filterF}
                 :generate        {:symbol "G" :arity 2 :impl generate}
                 :halve           {:symbol "H" :arity 1 :impl halve}
-                :count           {:symbol "I" :arity 1 :impl (fn [a b] (count (filter #(equal b %) (listify a))))}
+                :count           {:symbol "I" :arity 2 :impl (fn [a b] (count (filter #(equal a %) (listify b))))}
                 :addToEnd        {:symbol "J" :arity 2 :impl addToEnd}
                 :sortIncreasing  {:symbol "K" :arity 1 :impl sortIncreasing}
                 :length          {:symbol "L" :arity 1 :impl #(if (number? %) (count (str (bigint %))) (count %))}

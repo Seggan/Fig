@@ -18,8 +18,8 @@
     (cond
       (= "format" mode) (let [sb (StringBuilder. "# [Fig](https://github.com/Seggan/Fig), ")]
                           (if (every? #(str/includes? codepage (str %)) code)
-                            (let [log (/ (BigDecimalMath/log (bigdec (count codepage)) MathContext/DECIMAL128)
-                                         (BigDecimalMath/log 256M MathContext/DECIMAL128))]
+                            (let [log (with-precision 64 (/ (BigDecimalMath/log (bigdec (count codepage)) MathContext/DECIMAL128)
+                                                            (BigDecimalMath/log 256M MathContext/DECIMAL128)))]
                               (.append sb (format "\\$%d\\log_{256}(%d)\\approx\\$ " (count code) (count codepage)))
                               (.append sb (.setScale (bigdec (* (count code) log)) 3 RoundingMode/HALF_UP)))
                             (.append sb (count (.getBytes code StandardCharsets/UTF_8))))
@@ -34,5 +34,7 @@
                                                 (when (= "debugRun" mode) (println lexed))
                                                 (let [parsed (parsing/parse lexed)]
                                                   (when (= "debugRun" mode) (println parsed))
-                                                  (fig.helpers/printF (interp/interpretProgram parsed (map evalString (rest args))))))
+                                                  (fig.helpers/printF (interp/interpretProgram
+                                                                        parsed
+                                                                        (map evalString (rest (rest args)))))))
       :else (println "Usage: fig <mode> <file> [args...]"))))
