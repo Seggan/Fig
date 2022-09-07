@@ -28,7 +28,7 @@
                           (-> (Toolkit/getDefaultToolkit)
                               (.getSystemClipboard)
                               (.setContents (StringSelection. (.toString sb)) nil))
-                          (print sb)
+                          (print (str sb))
                           (println "Copied to clipboard"))
       (or (= "run" mode) (= "debugRun" mode)) (let [lexed (parsing/lex code)]
                                                 (when (= "debugRun" mode) (println lexed))

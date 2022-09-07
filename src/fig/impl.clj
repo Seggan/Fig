@@ -214,12 +214,13 @@
 (defn reduceF [a b]
   (if (and (number? a) (number? b))
     (range a b)
-    (let [[f coll] (sortTypes fn? identity a b)]
+    (let [[f coll] (sortTypes fn? identity a b)
+          func (fn [& inp] (apply f (reverse inp)))]
       (if (seq coll)
         (matchp coll
-                sequential? (reduce f coll)
-                string? (reduce f (listify coll))
-                number? (reduce f (digits coll)))
+                sequential? (reduce func coll)
+                string? (reduce func (listify coll))
+                number? (reduce func (digits coll)))
         0))))
 
 (defn removeF [a b]
@@ -267,10 +268,10 @@
 
 (defn takeF [a b]
   (if (number? b)
-    (matchp a
-            sequential? (take b a)
-            string? (subs a 0 b)
-            number? (applyOnParts #(take b %) a)
+    (matchp b
+            sequential? (take a b)
+            string? (subs b 0 a)
+            number? (applyOnParts #(take a %) b)
             a)
     (let [[f arg] (sortTypes fn? identity a b)
           func (comp bool f)]
