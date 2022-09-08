@@ -86,7 +86,7 @@
 
 (defn everyNth [a b c]
   (let [[f n arg] (sortTypes fn? number? identity a b c)
-        mapper (fn [a] (map-indexed #(if (zero? (mod n (inc %1))) (f %2) %2) a))]
+        mapper (fn [a] (map-indexed #(if (zero? (mod (inc %1) n)) (f %2) %2) a))]
     (matchp arg
             sequential? (mapper arg)
             string? (str/join (mapper (listify arg)))
