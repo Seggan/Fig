@@ -122,7 +122,7 @@
       (map first (iterate #(rest (append % (apply f %))) (take
                                                            (elvis (:figArity (meta f)) 1)
                                                            (cycle (if (seqable? i) i (list i))))))
-      (max-key cmp a b))))
+      (if (>= (cmp a b) 0) a b))))
 
 (defn halve [x]
   (vectorise halve x
@@ -381,7 +381,7 @@
                 :toBinary        {:symbol "b" :arity 1 :impl #(toBase % 2)}
                 :vectoriseOn     {:symbol "e" :arity 1 :impl vectoriseOn :macro true}
                 :flatten         {:symbol "f" :arity 1 :impl #(if (sequential? %) (flatten %) (listify %))}
-                :min             {:symbol "g" :arity 2 :impl #(min-key cmp %1 %2)}
+                :min             {:symbol "g" :arity 2 :impl #(if (<= (cmp %1 %2) 0) %1 %2)}
                 :unhalve         {:symbol "h" :arity 1 :impl unhalve}
                 :index           {:symbol "i" :arity 2 :impl index}
                 :joinOn          {:symbol "j" :arity 2 :impl #(str/join (str %1) (flatten (listify %2)))}
