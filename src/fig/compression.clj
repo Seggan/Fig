@@ -10,6 +10,8 @@
 
 (def dictionary (str/split-lines (slurp (clojure.java.io/resource "dict.txt"))))
 
+(def ^:private maxDictLength 10000)
+
 (defn- divmod! "Swaps the value in the num atom to be num // i and returns num % i"
   [num i] (mod (first (swap-vals! num quot i)) i))
 
@@ -39,7 +41,7 @@
        (let [tag (long (divmod! num 8))]
          (swap! result conj! (if (= (bit-and tag 2r100) 0)
                                (->> (count cPage) (divmod! num) (get cPage) (applyIf (lastBitSet tag) chars/toUpperCase))
-                               (->> (count dictionary) (divmod! num) (get dictionary) (applyIf (lastBitSet tag) str/capitalize))))
+                               (->> maxDictLength (divmod! num) (get dictionary) (applyIf (lastBitSet tag) str/capitalize))))
          (if (> (bit-and tag 2r010) 0) (swap! result conj! \space))))
      (str/join (reverse (persistent! (deref result)))))))
 
@@ -59,7 +61,7 @@
              (if word
                (do
                  (.delete string 0 (count word))
-                 (reset! num (+' (*' @num (count dictionary)) (.indexOf dictionary word))))
+                 (reset! num (+' (*' @num maxDictLength) (.indexOf dictionary word))))
                (do
                  (.deleteCharAt string 0)
                  (reset! num (+' (*' @num (count cPage)) (str/index-of cPage c)))))
@@ -72,4 +74,3 @@
                   (format "Compression failed. Compressed: '%s', original: '%s', decompressed: '%s'" compressed s decompressed)))
          compressed)))))
 
-(defn -main [] (println (compress "Hello, World!")))

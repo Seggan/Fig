@@ -103,11 +103,12 @@
     (matchp coll
             sequential? (filter f coll)
             string? (str/join (filter f (listify coll)))
+            number? (applyOnParts (comp f edn/read-string) coll)
             (let [check (complement (set (listify a)))]
               (matchp b
                       string? (str/join (filter check (listify b)))
                       sequential? (filter check b)
-                      a)))))
+                      b)))))
 
 (defn floor [x]
   (vectorise floor x
@@ -267,7 +268,7 @@
 (defn sum [x] (if (string? x) (reduce + (map int x)) (reduceF add x)))
 
 (defn takeF [a b]
-  (if (number? b)
+  (if (number? a)
     (matchp b
             sequential? (take a b)
             string? (subs b 0 a)
@@ -393,7 +394,7 @@
                 :remove          {:symbol "o" :arity 2 :impl removeF}
                 :rest            {:symbol "p" :arity 1 :impl #(if (string? %) (subs % 1) (rest (listify %)))}
                 :butlast         {:symbol "q" :arity 1 :impl butlastF}
-                :range           {:symbol "r" :arity 2 :impl #(if (sequential? %) (if (seq %) (reduceF % multiply) 1) (range %))}
+                :range           {:symbol "r" :arity 1 :impl #(if (sequential? %) (if (seq %) (reduceF % multiply) 1) (range %))}
                 :drop            {:symbol "s" :arity 2 :impl dropF}
                 :isString        {:symbol "#s" :arity 1 :impl #(if (string? %) 1 0)}
                 :take            {:symbol "t" :arity 2 :impl takeF}
