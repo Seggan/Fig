@@ -106,7 +106,7 @@
     (matchp coll
             sequential? (filter func coll)
             string? (str/join (filter func (listify coll)))
-            number? (applyOnParts #(func (digits %)) coll)
+            number? (applyOnParts #(map func (digits %)) coll)
             (let [check (complement (set (listify a)))]
               (matchp b
                       string? (str/join (filter check (listify b)))
