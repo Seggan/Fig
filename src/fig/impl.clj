@@ -101,11 +101,12 @@
       (if (equal a b) 1 0))))
 
 (defn filterF [a b]
-  (let [[f coll] (sortTypes fn? identity a b)]
+  (let [[f coll] (sortTypes fn? identity a b)
+        func (comp bool f)]
     (matchp coll
-            sequential? (filter f coll)
-            string? (str/join (filter f (listify coll)))
-            number? (applyOnParts #(f (digits %)) coll)
+            sequential? (filter func coll)
+            string? (str/join (filter func (listify coll)))
+            number? (applyOnParts #(func (digits %)) coll)
             (let [check (complement (set (listify a)))]
               (matchp b
                       string? (str/join (filter check (listify b)))
