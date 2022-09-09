@@ -17,6 +17,8 @@
 
 (def ^:private currentFunction (atom nil))
 
+(def programInput (atom nil))
+
 (declare interpret)
 
 ; Implementations of operators
@@ -103,7 +105,7 @@
     (matchp coll
             sequential? (filter f coll)
             string? (str/join (filter f (listify coll)))
-            number? (applyOnParts (comp f edn/read-string) coll)
+            number? (applyOnParts #(f (digits %)) coll)
             (let [check (complement (set (listify a)))]
               (matchp b
                       string? (str/join (filter check (listify b)))
@@ -147,6 +149,16 @@
     (sequential? b) (interleave (listify a) b)
     (and (string? a) (string? b)) (str/join (interleave a b))
     :else a))
+
+(defn isPrime [x]
+  (vectorise isPrime x
+             (cond
+               (< x 2) 0
+               (some #{x} [2 3 5]) 1
+               (some zero? (map #(mod x %) [2 3 5])) 0
+               :else (let [limit (math/ceil (math/sqrt x))]
+                       (loop [i 6 step 4]
+                         (if (> i limit) 1 (if (zero? (mod x i)) 0 (recur (+ i (- 6 step)) (- 6 step)))))))))
 
 (defn locate [a b] (matchp b
                            sequential? (elvis (ffirst (filter #(equal (second %) a) (map-indexed vector b))) -1)
@@ -402,6 +414,7 @@
                 :isNumber        {:symbol "#n" :arity 1 :impl #(if (number? %) 1 0)}
                 :remove          {:symbol "o" :arity 2 :impl removeF}
                 :rest            {:symbol "p" :arity 1 :impl #(if (string? %) (subs % 1) (rest (listify %)))}
+                :isPrime         {:symbol "mp" :arity 1 :impl isPrime}
                 :butlast         {:symbol "q" :arity 1 :impl butlastF}
                 :range           {:symbol "r" :arity 1 :impl #(if (sequential? %) (if (seq %) (reduceF % multiply) 1) (range %))}
                 :drop            {:symbol "s" :arity 2 :impl dropF}
@@ -410,6 +423,7 @@
                 :getRegister     {:symbol "v" :arity 0 :impl (const (deref register))}
                 :wrapTwo         {:symbol "w" :arity 2 :impl vector}
                 :input           {:symbol "x" :arity 0}     ; input is implemented in the interpret function itself
+                :programInput    {:symbol "#x" :arity 0 :impl (const (deref programInput))}
                 :uninterleave    {:symbol "y" :arity 1 :impl uninterleave}
                 :zipmap          {:symbol "z" :arity 2 :impl zipmapF}
                 :decrement       {:symbol "{" :arity 1 :impl dec'}
@@ -427,6 +441,7 @@
                 :alphaAndDigits  {:symbol "cD" :arity 0 :impl (const "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")}
                 :newline         {:symbol "cn" :arity 0 :impl (const "\n")}
                 :bothVowels      {:symbol "cO" :arity 0 :impl (const "AEIOUaeiou")}
+                :printableAscii  {:symbol "cp" :arity 0 :impl (const " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~")}
                 :bothVowelsWithY {:symbol "cY" :arity 0 :impl (const "AEIOUYaeiouy")}
                 :uVowels         {:symbol "cV" :arity 0 :impl (const "AEIOU")}
                 :lVowels         {:symbol "cv" :arity 0 :impl (const "aeiou")}

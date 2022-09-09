@@ -32,9 +32,9 @@
                           (println "Copied to clipboard"))
       (or (= "run" mode) (= "debugRun" mode)) (let [lexed (parsing/lex code)]
                                                 (when (= "debugRun" mode) (println lexed))
-                                                (let [parsed (parsing/parse lexed)]
+                                                (let [parsed (parsing/parse lexed)
+                                                      input (map evalString (rest (rest args)))]
                                                   (when (= "debugRun" mode) (println parsed))
-                                                  (fig.helpers/printF (interp/interpretProgram
-                                                                        parsed
-                                                                        (map evalString (rest (rest args)))))))
+                                                  (reset! interp/programInput input)
+                                                  (fig.helpers/printF (interp/interpretProgram parsed input))))
       :else (println "Usage: fig <mode> <file> [args...]"))))
