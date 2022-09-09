@@ -355,7 +355,7 @@
                 :greaterThan     {:symbol ">" :arity 2 :impl #(if (> (cmp %1 %2) 0) 1 0)}
                 :binaryIf        {:symbol "?" :arity 2 :impl binaryIf :macro true}
                 :all             {:symbol "A" :arity 1 :impl all}
-                :fromBinary      {:symbol "B" :arity 1 :impl #(fromBase % 2)}
+                :fromBinary      {:symbol "B" :arity 1 :impl #(if (sequential? %) (fromBase % 2) (str %))}
                 :chrOrd          {:symbol "C" :arity 1 :impl chrOrd}
                 :compress        {:symbol "#D" :arity 1 :impl compress}
                 :even            {:symbol "E" :arity 1 :impl even}
