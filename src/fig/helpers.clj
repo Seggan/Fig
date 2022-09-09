@@ -3,6 +3,8 @@
             [clojure.math.numeric-tower :as math]
             [clojure.string :as str]))
 
+(def numberRegex #"^-?\d+(\.\d+)?$")
+
 (defn append [coll & stuff] (lazy-cat coll stuff))
 
 (defn applyOnParts [f num] (->> (str/split (str num) #"\.")
@@ -20,6 +22,8 @@
 
 (defn cmp [a b] (cond
                   (and (number? a) (number? b)) (compare a b)
+                  (and (string? a) (re-matches numberRegex a) (number? b)) (cmp (edn/read-string a) b)
+                  (and (number? a) (string? b) (re-matches numberRegex b)) (cmp a (edn/read-string b))
                   (and (coll? a) (coll? b)) (let [aIt (.iterator a)
                                                   bIt (.iterator b)]
                                               (loop []
@@ -57,7 +61,7 @@
 
 (defn evalString [s]
   (cond
-    (re-matches #"-?\d+(.\d+)?" s) (edn/read-string s)
+    (re-matches numberRegex s) (edn/read-string s)
     (and (str/starts-with? s "[") (str/ends-with? s "]"))
     (let [stripped (subs s 1 (dec (count s)))]
       (if (str/blank? stripped)

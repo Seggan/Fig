@@ -75,7 +75,7 @@
                 result))
       (cond
         (number? b) (if (string? a) (subs a b) (drop b a))
-        (and (string? a) (string? b)) (= (str/lower-case a) (str/lower-case b))
+        (and (string? a) (string? b)) (if (= (str/lower-case a) (str/lower-case b)) 1 0)
         :else a))))
 
 (defn even [x] (matchp x
@@ -114,7 +114,7 @@
   (vectorise floor x
              (matchp x
                      number? (math/floor x)
-                     string? (edn/read-string x)
+                     string? (edn/read-string (str/join (drop-while #{\0} x))) ; leading zeros are so annoying
                      x)))
 
 (defn generate [a b]
@@ -150,7 +150,7 @@
 
 (defn locate [a b] (matchp b
                            sequential? (elvis (ffirst (filter #(equal (second %) a) (map-indexed vector b))) -1)
-                           string? (str/index-of b a)
+                           string? (if (str/includes? b a) (str/index-of b a) -1)
                            a))
 
 (defn loopForever [& x] (loop [] (run! interpret x) (recur)))
@@ -284,6 +284,14 @@
 
 (defn ternaryIf [a b c] (if (bool (interpret a)) (interpret b) (interpret c)))
 
+(defn toBinary [x]
+  (vectorise toBinary x
+             (matchp x
+                     number? (toBase x 2)
+                     string? (if (= 1 (count x))
+                               (chars/isAlphabetic (first x))
+                               (map chars/isAlphabetic x)))))
+
 (defn transliterate [a b c]
   (if (and (string? a) (string? b) (string? c))
     (let [m (zipmap a b)] (strmap #(if (contains? m %) (get m %) %) c))
@@ -334,7 +342,7 @@
                 :ternaryIf       {:symbol "!" :arity 3 :impl ternaryIf :macro true}
                 :reverse         {:symbol "$" :arity 1 :impl reverseF}
                 :modulo          {:symbol "%" :arity 2 :impl modulo}
-                :bitAnd          {:symbol "&" :arity 2 :impl bit-and}
+                :bitAnd          {:symbol "&" :arity 2 :impl #(bit-and (long %1) (long %2))}
                 :loopForever     {:symbol "(" :arity -1 :impl loopForever :macro true}
                 :multiply        {:symbol "*" :arity 2 :impl multiply}
                 :add             {:symbol "+" :arity 2 :impl add}
@@ -379,13 +387,14 @@
                 :floor           {:symbol "_" :arity 1 :impl floor}
                 :list            {:symbol "`" :arity -1 :impl vector}
                 :any             {:symbol "a" :arity 1 :impl any}
-                :toBinary        {:symbol "b" :arity 1 :impl #(toBase % 2)}
+                :toBinary        {:symbol "b" :arity 1 :impl toBinary}
                 :vectoriseOn     {:symbol "e" :arity 1 :impl vectoriseOn :macro true}
                 :flatten         {:symbol "f" :arity 1 :impl #(if (sequential? %) (flatten %) (listify %))}
                 :min             {:symbol "g" :arity 2 :impl #(if (<= (cmp %1 %2) 0) %1 %2)}
                 :unhalve         {:symbol "h" :arity 1 :impl unhalve}
                 :index           {:symbol "i" :arity 2 :impl index}
                 :joinOn          {:symbol "j" :arity 2 :impl #(str/join (str %1) (flatten (listify %2)))}
+                :joinOnNewline   {:symbol "#j" :arity 1 :impl #(str/join "\n" (flatten (listify %)))}
                 :prefixes        {:symbol "k" :arity 1 :impl prefixes}
                 :locate          {:symbol "l" :arity 2 :impl locate}
                 :isList          {:symbol "#l" :arity 1 :impl #(if (sequential? %) 1 0)}
@@ -404,9 +413,9 @@
                 :uninterleave    {:symbol "y" :arity 1 :impl uninterleave}
                 :zipmap          {:symbol "z" :arity 2 :impl zipmapF}
                 :decrement       {:symbol "{" :arity 1 :impl dec'}
-                :bitOr           {:symbol "|" :arity 2 :impl bit-or}
+                :bitOr           {:symbol "|" :arity 2 :impl #(bit-or (long %1) (long %2))}
                 :increment       {:symbol "}" :arity 1 :impl inc'}
-                :bitNot          {:symbol "~" :arity 1 :impl bit-not}
+                :bitNot          {:symbol "~" :arity 1 :impl (comp bit-not long)}
 
                 :uAlphabet       {:symbol "cA" :arity 0 :impl (const "ABCDEFGHIJKLMNOPQRSTUVWXYZ")}
                 :lAlphabet       {:symbol "ca" :arity 0 :impl (const "abcdefghijklmnopqrstuvwxyz")}

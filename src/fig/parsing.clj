@@ -1,7 +1,8 @@
 (ns fig.parsing
   (:require [clojure.string :as str]
             [fig.compression :as compression]
-            [fig.impl :as ops]))
+            [fig.impl :as ops])
+  (:use [clojure.math.numeric-tower :only [expt]]))
 
 (def ^:private tokenMap {")"  :closer
                          "'"  :functionRef
@@ -74,8 +75,10 @@
       (= tokenType :functionRef) (do
                                    (reset! isEnding false)
                                    (list :functionRef (parseToken (consume tokens) tokens)))
-      (= tokenType :operatorRef) (let [op (second (consume tokens))]
-                                   (list :functionRef (list op (repeat (ops/attr op :arity) (list :input)))))
+      (= tokenType :operatorRef) (let [[type op] (consume tokens)]
+                                   (if (= :number type)
+                                     (list :constant (expt 10 (bigint op)))
+                                     (list :functionRef (list op (repeat (ops/attr op :arity) (list :input))))))
       (= tokenType :endFunction) (do (reset! isEnding true) :nop)
       (nil? tokenType) (throw "Unexpected end of input")
       :else :nop)))

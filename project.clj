@@ -1,4 +1,4 @@
-(defproject fig "1.1.0"
+(defproject fig "1.2.0"
   :description "A functional golfing language"
   :url "http://github.com/Seggan/Fig"
   :license {:name "Apache License 2.0"
