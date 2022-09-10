@@ -424,7 +424,7 @@
                 :getRegister     {:symbol "v" :arity 0 :impl (const (deref register))}
                 :wrapTwo         {:symbol "w" :arity 2 :impl vector}
                 :input           {:symbol "x" :arity 0}     ; input is implemented in the interpret function itself
-                :programInput    {:symbol "#x" :arity 0 :impl (const (deref programInput))}
+                :programInput    {:symbol "#x" :arity 0 :impl (const (.next (deref programInput)))}
                 :uninterleave    {:symbol "y" :arity 1 :impl uninterleave}
                 :zipmap          {:symbol "z" :arity 2 :impl zipmapF}
                 :decrement       {:symbol "{" :arity 1 :impl dec'}

@@ -35,6 +35,6 @@
                                                 (let [parsed (parsing/parse lexed)
                                                       input (map evalString (rest (rest args)))]
                                                   (when (= "debugRun" mode) (println parsed))
-                                                  (reset! interp/programInput input)
+                                                  (reset! interp/programInput (.iterator (cycle input)))
                                                   (fig.helpers/printF (interp/interpretProgram parsed input))))
       :else (println "Usage: fig <mode> <file> [args...]"))))
