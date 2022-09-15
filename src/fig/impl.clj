@@ -1,6 +1,5 @@
 (ns fig.impl
-  (:require [clojure.edn :as edn]
-            [clojure.math.numeric-tower :as math]
+  (:require [clojure.math.numeric-tower :as math]
             [clojure.string :as str]
             [fig.chars :as chars]
             [fig.compression :as compression])
@@ -73,7 +72,7 @@
             result (lazy-cat (apply f (take arity coll)) (drop arity coll))]
         (matchp arg
                 string? (str/join result)
-                number? (edn/read-string (str/join result))
+                number? (readNumber (str/join result))
                 result))
       (cond
         (number? b) (if (string? a) (subs a b) (drop b a))
@@ -117,7 +116,7 @@
   (vectorise floor x
              (matchp x
                      number? (math/floor x)
-                     string? (edn/read-string (str/join (drop-while #{\0} x))) ; leading zeros are so annoying
+                     string? (readNumber x)
                      x)))
 
 (defn generate [a b]
@@ -415,7 +414,6 @@
                 :isNumber        {:symbol "#n" :arity 1 :impl #(if (number? %) 1 0)}
                 :remove          {:symbol "o" :arity 2 :impl removeF}
                 :rest            {:symbol "p" :arity 1 :impl #(if (string? %) (subs % 1) (rest (listify %)))}
-                :isPrime         {:symbol "mp" :arity 1 :impl isPrime}
                 :butlast         {:symbol "q" :arity 1 :impl butlastF}
                 :range           {:symbol "r" :arity 1 :impl #(if (sequential? %) (if (seq %) (reduceF % multiply) 1) (range %))}
                 :drop            {:symbol "s" :arity 2 :impl dropF}
@@ -455,7 +453,11 @@
                 :phi             {:symbol "mG" :arity 0 :impl (const 1.61803398874989484820458683436563811772030917980576M)}
                 :pi              {:symbol "mP" :arity 0 :impl (const 3.14159265358979323846264338327950288419716939937510M)}
                 :countingNumbers {:symbol "mC" :arity 0 :impl (const (iterate inc' 1))}
-                :naturalNumbers  {:symbol "mN" :arity 0 :impl (const (iterate inc' 0))}})
+                :naturalNumbers  {:symbol "mN" :arity 0 :impl (const (iterate inc' 0))}
+
+                :isPrime         {:symbol "mp" :arity 1 :impl isPrime}
+                :square          {:symbol "mQ" :arity 1 :impl (fn sq [x] (vectorise sq x (*' x x)))}
+                :squareRoot      {:symbol "mq" :arity 1 :impl (fn sqrt [x] (vectorise sqrt x (math/sqrt x)))}})
 
 (defn attr [op attribute] (if (contains? operators op)
                             (get-in operators [op attribute])

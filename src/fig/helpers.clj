@@ -1,9 +1,10 @@
 (ns fig.helpers
-  (:require [clojure.edn :as edn]
-            [clojure.math.numeric-tower :as math]
+  (:require [clojure.math.numeric-tower :as math]
             [clojure.string :as str]))
 
 (def numberRegex #"^-?\d+(\.\d+)?$")
+
+(declare readNumber)
 
 (defn append [coll & stuff] (lazy-cat coll stuff))
 
@@ -11,7 +12,7 @@
                                 (map f)
                                 (map #(if (sequential? %) (str/join (flatten %)) %))
                                 (str/join \.)
-                                (edn/read-string)))
+                                (readNumber)))
 
 (defn bool [x] (cond
                  (or (coll? x) (string? x)) (boolean (seq x))
@@ -22,8 +23,8 @@
 
 (defn cmp [a b] (cond
                   (and (number? a) (number? b)) (compare a b)
-                  (and (string? a) (re-matches numberRegex a) (number? b)) (cmp (edn/read-string a) b)
-                  (and (number? a) (string? b) (re-matches numberRegex b)) (cmp a (edn/read-string b))
+                  (and (string? a) (re-matches numberRegex a) (number? b)) (cmp (readNumber a) b)
+                  (and (number? a) (string? b) (re-matches numberRegex b)) (cmp a (readNumber b))
                   (and (coll? a) (coll? b)) (let [aIt (.iterator a)
                                                   bIt (.iterator b)]
                                               (loop []
@@ -61,7 +62,7 @@
 
 (defn evalString [s]
   (cond
-    (re-matches numberRegex s) (edn/read-string s)
+    (re-matches numberRegex s) (readNumber s)
     (and (str/starts-with? s "[") (str/ends-with? s "]"))
     (let [stripped (subs s 1 (dec (count s)))]
       (if (str/blank? stripped)
@@ -114,6 +115,8 @@
                           x))
 
 (defn numify [x] (if (number? x) x (count x)))
+
+(defn readNumber [x] (if (re-matches numberRegex x) (bigdec x) x))
 
 (defn sortTypes
   ([t1 t2 a b] (cond
