@@ -43,7 +43,7 @@
                       string? (str/lower-case x)
                       x))
 
-(defn binaryIf [a b] (format "'%s'" (let [condResult (interpret a)] (if (bool condResult) (interpret b) condResult))))
+(defn binaryIf [a b] (let [condResult (interpret a)] (if (bool condResult) (interpret b) condResult)))
 
 (defn butlastF [x] (if (string? x) (subs x 0 (dec (count x))) (elvis (butlast x) (list))))
 
@@ -56,7 +56,7 @@
                                (map int x))
                      fn? (fn [& inp] (if (bool (apply x inp)) 0 1)))))
 
-(defn compress [x] (let [compressed (compression/compress x)] (if (< (count compressed) (count x)) compressed x)))
+(defn compress [x] (format "'%s'" (let [compressed (compression/compress x)] (if (< (count compressed) (count x)) compressed x))))
 
 (defn divide [a b]
   (vectorise divide a b
@@ -141,8 +141,8 @@
   (let [[f arg] (sortTypes fn? identity a b)]
     (cond
       (some? arg) (if (equal (f arg) arg) 1 0)
-      (number? a) (get (listify b) a)
-      :else (get (listify a) b))))
+      (number? a) (nth (listify b) a -1)
+      :else (nth (listify a) b -1))))
 
 (defn interleaveF [a b]
   (cond
