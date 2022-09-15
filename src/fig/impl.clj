@@ -470,10 +470,10 @@
 
 (defmacro ^:private inputFrame [in body]
   `(tempAtomValue
-     ~in
+     input
      (.iterator (cycle ~in))
      (tempAtomValue
-       programInput
+       fullInput
        ~in
        ~body)))
 
