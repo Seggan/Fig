@@ -14,6 +14,8 @@
 
 (def ^:private input (atom nil))
 
+(def ^:private fullInput (atom nil))
+
 (def ^:private currentFunction (atom nil))
 
 (def programInput (atom nil))
@@ -423,6 +425,7 @@
                 :wrapTwo         {:symbol "w" :arity 2 :impl vector}
                 :input           {:symbol "x" :arity 0}     ; input is implemented in the interpret function itself
                 :programInput    {:symbol "#x" :arity 0 :impl (const (.next (deref programInput)))}
+                :fullInput       {:symbol "#X" :arity 0 :impl (const (deref fullInput))}
                 :uninterleave    {:symbol "y" :arity 1 :impl uninterleave}
                 :zipmap          {:symbol "z" :arity 2 :impl zipmapF}
                 :decrement       {:symbol "{" :arity 1 :impl dec'}
@@ -465,6 +468,15 @@
 
 ; Interpreter
 
+(defmacro ^:private inputFrame [in body]
+  `(tempAtomValue
+     input
+     (.iterator (cycle in))
+     (tempAtomValue
+       programInput
+       in
+       ~body)))
+
 (defn interpret [node]
   (reset! lastReturnValue
           (let [[type args] node]
@@ -473,18 +485,16 @@
               (= type :input) (.next @input)
               (= type :functionRef) (let [arity {:figArity (count (filter #{:input} (flatten args)))}]
                                       (with-meta
-                                        (fn figLambda [& inp] (tempAtomValue
-                                                                input
-                                                                (.iterator (cycle inp))
+                                        (fn figLambda [& inp] (inputFrame
+                                                                inp
                                                                 (tempAtomValue
                                                                   currentFunction
                                                                   (with-meta figLambda arity)
                                                                   (interpret args)))) arity))
               :else (apply (attr type :impl) (if (attr type :macro) args (map interpret args)))))))
 
-(defn interpretProgram [ast programInput] (tempAtomValue
-                                            input
-                                            (.iterator (cycle programInput))
+(defn interpretProgram [ast programInput] (inputFrame
+                                            programInput
                                             (tempAtomValue
                                               currentFunction
                                               (with-meta
