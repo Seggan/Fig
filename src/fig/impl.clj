@@ -279,7 +279,7 @@
                (and (string? a) (string? b)) (str/replace b a "")
                :else a)))
 
-(defn sum [x] (if (string? x) (reduce + (map int x)) (reduceF add x)))
+(defn sum [x] (if (string? x) (reduce + (map int x)) (reduceF add (flatten (listify x)))))
 
 (defn takeF [a b]
   (if (number? a)
