@@ -1,6 +1,8 @@
 # Fig
 A functional, fractional-byte programming language. Tired of annoying Unicode codepages in your favorite golfing languages? Fig uses pure, printable ASCII.
 
+[Online interpreter](https://fig.fly.dev) (thanks to Steffan153)
+
 ## How to run
 Simple. Download the release you want from the releases tab then run 
 ```shell
