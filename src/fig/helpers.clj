@@ -157,3 +157,5 @@
                                          (map ~this ~a (repeat ~b)))
                       (sequential? ~b) (map ~this (repeat ~a) ~b)
                       :else ~else)))
+
+(defn vectoriseFn [f] (fn v [a] (vectorise f a (f a))))

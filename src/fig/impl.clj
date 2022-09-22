@@ -108,7 +108,8 @@
             sequential? (filter func coll)
             string? (str/join (filter func (listify coll)))
             number? (applyOnParts #(filter func (digits %)) coll)
-            (let [check (complement (set (listify a)))]
+            (let [l (listify a)
+                  check #(not (some (fn p [n] (equal n %)) l))]
               (matchp b
                       string? (str/join (filter check (listify b)))
                       sequential? (filter check b)
@@ -151,16 +152,6 @@
     (sequential? b) (interleave (listify a) b)
     (and (string? a) (string? b)) (str/join (interleave a b))
     :else a))
-
-(defn isPrime [x]
-  (vectorise isPrime x
-             (cond
-               (< x 2) 0
-               (some #{x} [2 3 5]) 1
-               (some zero? (map #(mod x %) [2 3 5])) 0
-               :else (let [limit (math/ceil (math/sqrt x))]
-                       (loop [i 6 step 4]
-                         (if (> i limit) 1 (if (zero? (mod x i)) 0 (recur (+ i (- 6 step)) (- 6 step)))))))))
 
 (defn locate [a b] (matchp b
                            sequential? (elvis (ffirst (filter #(equal (second %) a) (map-indexed vector b))) -1)
@@ -246,6 +237,17 @@
         (sequential? b) (remove #(equal a %) b)
         (and (string? a) (string? b)) (str a (subs b (count a)))
         :else a))))
+
+(defn restF [x] (matchp x
+                        string? (subs x 1)
+                        sequential? (rest (listify x))
+                        number? (cond
+                                  (< x 2) 0
+                                  (some #{x} [2 3 5]) 1
+                                  (some zero? (map #(mod x %) [2 3 5])) 0
+                                  :else (let [limit (math/ceil (math/sqrt x))]
+                                          (loop [i 6 step 4]
+                                            (if (> i limit) 1 (if (zero? (mod x i)) 0 (recur (+ i (- 6 step)) (- 6 step)))))))))
 
 (defn reverseF [x] (matchp x
                            sequential? (reverse x)
@@ -415,7 +417,7 @@
                 :everyNth        {:symbol "n" :arity 3 :impl everyNth}
                 :isNumber        {:symbol "#n" :arity 1 :impl #(if (number? %) 1 0)}
                 :remove          {:symbol "o" :arity 2 :impl removeF}
-                :rest            {:symbol "p" :arity 1 :impl #(if (string? %) (subs % 1) (rest (listify %)))}
+                :rest            {:symbol "p" :arity 1 :impl restF}
                 :butlast         {:symbol "q" :arity 1 :impl butlastF}
                 :range           {:symbol "r" :arity 1 :impl #(if (sequential? %) (if (seq %) (reduceF % multiply) 1) (range %))}
                 :drop            {:symbol "s" :arity 2 :impl dropF}
@@ -428,9 +430,9 @@
                 :fullInput       {:symbol "#X" :arity 0 :impl (const (deref fullInput))}
                 :uninterleave    {:symbol "y" :arity 1 :impl uninterleave}
                 :zipmap          {:symbol "z" :arity 2 :impl zipmapF}
-                :decrement       {:symbol "{" :arity 1 :impl dec'}
+                :decrement       {:symbol "{" :arity 1 :impl (vectoriseFn dec')}
                 :bitOr           {:symbol "|" :arity 2 :impl #(bit-or (long %1) (long %2))}
-                :increment       {:symbol "}" :arity 1 :impl inc'}
+                :increment       {:symbol "}" :arity 1 :impl (vectoriseFn inc')}
                 :bitNot          {:symbol "~" :arity 1 :impl (comp bit-not long)}
 
                 :uAlphabet       {:symbol "cA" :arity 0 :impl (const "ABCDEFGHIJKLMNOPQRSTUVWXYZ")}
@@ -458,9 +460,8 @@
                 :countingNumbers {:symbol "mC" :arity 0 :impl (const (iterate inc' 1))}
                 :naturalNumbers  {:symbol "mN" :arity 0 :impl (const (iterate inc' 0))}
 
-                :isPrime         {:symbol "mp" :arity 1 :impl isPrime}
-                :square          {:symbol "mQ" :arity 1 :impl (fn sq [x] (vectorise sq x (*' x x)))}
-                :squareRoot      {:symbol "mq" :arity 1 :impl (fn sqrt [x] (vectorise sqrt x (math/sqrt x)))}})
+                :square          {:symbol "mQ" :arity 1 :impl (vectoriseFn #(*' % %))}
+                :squareRoot      {:symbol "mq" :arity 1 :impl (vectoriseFn math/sqrt)}})
 
 (defn attr [op attribute] (if (contains? operators op)
                             (get-in operators [op attribute])
