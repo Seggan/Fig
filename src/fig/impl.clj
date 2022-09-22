@@ -355,7 +355,7 @@
 ; Operators
 
 (def operators {
-                :ternaryIf       {:symbol "!" :arity 3 :impl ternaryIf :macro true}
+                :logicalNot      {:symbol "!" :arity 1 :impl #(if (bool %) 0 1)}
                 :reverse         {:symbol "$" :arity 1 :impl reverseF}
                 :modulo          {:symbol "%" :arity 2 :impl modulo}
                 :bitAnd          {:symbol "&" :arity 2 :impl #(bit-and (long %1) (long %2))}
@@ -369,7 +369,8 @@
                 :lessThan        {:symbol "<" :arity 2 :impl #(if (< (cmp %1 %2) 0) 1 0)}
                 :equals          {:symbol "=" :arity 2 :impl equals}
                 :greaterThan     {:symbol ">" :arity 2 :impl #(if (> (cmp %1 %2) 0) 1 0)}
-                :binaryIf        {:symbol "?" :arity 2 :impl binaryIf :macro true}
+                :ternaryIf       {:symbol "?" :arity 3 :impl ternaryIf :macro true}
+                :binaryIf        {:symbol "#?" :arity 2 :impl binaryIf :macro true}
                 :all             {:symbol "A" :arity 1 :impl all}
                 :fromBinary      {:symbol "B" :arity 1 :impl #(if (sequential? %) (fromBase % 2) (str %))}
                 :chrOrd          {:symbol "C" :arity 1 :impl chrOrd}
