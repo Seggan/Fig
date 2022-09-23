@@ -477,6 +477,7 @@
                 :countingNumbers {:symbol "mC" :arity 0 :impl (const (iterate inc' 1))}
                 :naturalNumbers  {:symbol "mN" :arity 0 :impl (const (iterate inc' 0))}
 
+                :mean            {:symbol "mM" :arity 1 :impl #(with-precision 128 (/ (reduceF % add) (count %)))}
                 :square          {:symbol "mQ" :arity 1 :impl (vectoriseFn #(*' % %))}
                 :squareRoot      {:symbol "mq" :arity 1 :impl (vectoriseFn math/sqrt)}})
 
