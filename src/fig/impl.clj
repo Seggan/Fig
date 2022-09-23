@@ -20,7 +20,11 @@
 
 (def programInput (atom nil))
 
+; Forward declarations
+
 (declare interpret)
+(declare mapF)
+(declare prefixes)
 
 ; Implementations of operators
 
@@ -122,6 +126,9 @@
                      string? (readNumber x)
                      x)))
 
+(defn fromDigits [x]
+  (if (sequential? x) (readNumber (str/join x))) x)
+
 (defn generate [a b]
   (let [[f i] (sortTypes fn? identity a b)]
     (if (some? f)
@@ -147,11 +154,14 @@
       :else (nth (listify a) b -1))))
 
 (defn interleaveF [a b]
-  (cond
-    (sequential? a) (interleave a (listify b))
-    (sequential? b) (interleave (listify a) b)
-    (and (string? a) (string? b)) (str/join (interleave a b))
-    :else a))
+  (let [[f coll] (sortTypes fn? identity a b)]
+    (if (some? coll)
+      (mapF f (prefixes coll))
+      (cond
+        (sequential? a) (interleave a (listify b))
+        (sequential? b) (interleave (listify a) b)
+        (and (string? a) (string? b)) (str/join (interleave a b))
+        :else a))))
 
 (defn locate [a b] (matchp b
                            sequential? (elvis (ffirst (filter #(equal (second %) a) (map-indexed vector b))) -1)
@@ -212,8 +222,13 @@
 
 (defn prefixes [x]
   (matchp x
-          sequential? (take-while identity (iterate butlast x))
-          string? (map str/join (take-while identity (iterate butlast x)))
+          sequential? (take-while identity
+                                  ((fn p [prev n]
+                                     (if (seq n)
+                                       (let [np (lazy-cat prev [(first n)])]
+                                         (lazy-seq (cons np (p np (rest n)))))
+                                       nil)) [] x))
+          string? (reverse (map str/join (take-while identity (iterate butlast x))))
           number? (filter #(zero? (mod x %)) (range 1 x))
           x))
 
@@ -405,6 +420,7 @@
                 :list            {:symbol "`" :arity -1 :impl vector}
                 :any             {:symbol "a" :arity 1 :impl any}
                 :toBinary        {:symbol "b" :arity 1 :impl toBinary}
+                :fromDigits      {:symbol "d" :arity 1 :impl fromDigits}
                 :vectoriseOn     {:symbol "e" :arity 1 :impl vectoriseOn :macro true}
                 :flatten         {:symbol "f" :arity 1 :impl #(if (sequential? %) (flatten %) (listify %))}
                 :min             {:symbol "g" :arity 2 :impl #(if (<= (cmp %1 %2) 0) %1 %2)}
