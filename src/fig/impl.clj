@@ -258,11 +258,11 @@
                         sequential? (rest (listify x))
                         number? (cond
                                   (< x 2) 0
-                                  (some #{x} [2 3 5]) 1
+                                  (seq (filter (partial equal x) [2 3 5])) 1
                                   (some zero? (map #(mod x %) [2 3 5])) 0
                                   :else (let [limit (math/ceil (math/sqrt x))]
                                           (loop [i 6 step 4]
-                                            (if (> i limit) 1 (if (zero? (mod x i)) 0 (recur (+ i (- 6 step)) (- 6 step)))))))))
+                                            (if (> i limit) 1 (if (zero? (mod x i)) 0 (recur (+' i (- 6 step)) (- 6 step)))))))))
 
 (defn reverseF [x] (matchp x
                            sequential? (reverse x)
