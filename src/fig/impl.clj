@@ -137,6 +137,8 @@
                                                            (cycle (if (seqable? i) i (list i))))))
       (if (>= (cmp a b) 0) a b))))
 
+(defn greaterThan [a b] (vectorise greaterThan a b (if (> (cmp b a) 0) 1 0)))
+
 (defn halve [x]
   (vectorise halve x
              (if (number? x)
@@ -162,6 +164,8 @@
         (sequential? b) (interleave (listify a) b)
         (and (string? a) (string? b)) (str/join (interleave a b))
         :else a))))
+
+(defn lessThan [a b] (vectorise lessThan a b (if (< (cmp b a) 0) 1 0)))
 
 (defn locate [a b] (matchp b
                            sequential? (elvis (ffirst (filter #(equal (second %) a) (map-indexed vector b))) -1)
@@ -381,9 +385,9 @@
                 :subtract        {:symbol "-" :arity 2 :impl subtract}
                 :pair            {:symbol ":" :arity 1 :impl #(vector % %)}
                 :print           {:symbol ";" :arity 1 :impl #(printF % nil)}
-                :lessThan        {:symbol "<" :arity 2 :impl #(if (< (cmp %1 %2) 0) 1 0)}
+                :lessThan        {:symbol "<" :arity 2 :impl greaterThan}
                 :equals          {:symbol "=" :arity 2 :impl equals}
-                :greaterThan     {:symbol ">" :arity 2 :impl #(if (> (cmp %1 %2) 0) 1 0)}
+                :greaterThan     {:symbol ">" :arity 2 :impl lessThan}
                 :ternaryIf       {:symbol "?" :arity 3 :impl ternaryIf :macro true}
                 :binaryIf        {:symbol "#?" :arity 2 :impl binaryIf :macro true}
                 :all             {:symbol "A" :arity 1 :impl all}
@@ -510,7 +514,7 @@
                                                                   currentFunction
                                                                   (with-meta figLambda arity)
                                                                   (interpret args)))) arity))
-              :else (apply (attr type :impl) (if (attr type :macro) args (map interpret args)))))))
+              :else (apply (attr type :impl) (if (attr type :macro) args (reverse (map interpret (reverse args)))))))))
 
 (defn interpretProgram [ast programInput] (inputFrame
                                             programInput
