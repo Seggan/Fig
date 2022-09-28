@@ -487,7 +487,7 @@
 
 (defn attr [op attribute] (if (contains? operators op)
                             (get-in operators [op attribute])
-                            (throw (IllegalArgumentException. "Unknown operator"))))
+                            (throw (IllegalArgumentException. (str "Unknown operator " op)))))
 
 ; Interpreter
 
@@ -521,6 +521,8 @@
                                             (tempAtomValue
                                               currentFunction
                                               (with-meta
-                                                (fn [& inp] (apply interpret (cons ast inp)))
+                                                (fn [& inp] (inputFrame
+                                                              inp
+                                                              (last (map interpret ast))))
                                                 {:figArity (count (filter #{:input} (flatten ast)))})
                                               (elvis (last (map interpret (filter coll? ast))) 0))))
