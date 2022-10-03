@@ -87,7 +87,7 @@
 
 (defn even [x] (matchp x
                        sequential? (map-indexed vector x)
-                       number? (if (= 0 (mod x 2)) 1 0)
+                       number? (if (== 0 (mod x 2)) 1 0)
                        string? (map-indexed #(vector %1 (str %2)) x)
                        x))
 
@@ -241,12 +241,11 @@
     (range a b)
     (let [[f coll] (sortTypes fn? identity a b)
           func (fn [& inp] (apply f (reverse inp)))]
-      (if (seq coll)
-        (matchp coll
-                sequential? (reduce func coll)
-                string? (reduce func (listify coll))
-                number? (reduce func (digits coll)))
-        0))))
+      (matchp coll
+              sequential? (reduce func coll)
+              string? (reduce func (listify coll))
+              number? (reduce func (digits coll))
+              a))))
 
 (defn removeF [a b]
   (let [[f arg] (sortTypes fn? identity a b)]
@@ -450,7 +449,7 @@
                 :programInput    {:symbol "#x" :arity 0 :impl (const (.next (deref programInput)))}
                 :fullInput       {:symbol "#X" :arity 0 :impl (const (deref fullInput))}
                 :uninterleave    {:symbol "y" :arity 1 :impl uninterleave}
-                :zipmap          {:symbol "z" :arity 2 :impl zipmapF}
+                :zipmap          {:symbol "z" :arity 3 :impl zipmapF}
                 :decrement       {:symbol "{" :arity 1 :impl (vectoriseFn dec')}
                 :bitOr           {:symbol "|" :arity 2 :impl #(bit-or (long %1) (long %2))}
                 :increment       {:symbol "}" :arity 1 :impl (vectoriseFn inc')}
@@ -514,7 +513,7 @@
                                                                   currentFunction
                                                                   (with-meta figLambda arity)
                                                                   (interpret args)))) arity))
-              :else (apply (attr type :impl) (if (attr type :macro) args (reverse (map interpret (reverse args)))))))))
+              :else (apply (attr type :impl) (if (attr type :macro) args (map interpret args)))))))
 
 (defn interpretProgram [ast programInput] (inputFrame
                                             programInput
