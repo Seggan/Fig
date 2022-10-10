@@ -75,21 +75,26 @@
         arity (:figArity (meta f))]
     (if (some? arg)
       (let [coll (listify arg)
-            result (lazy-cat (apply f (take arity coll)) (drop arity coll))]
+            result (lazy-cat (list (apply f (take arity coll))) (drop arity coll))]
         (matchp arg
                 string? (str/join result)
                 number? (readNumber (str/join result))
                 result))
-      (cond
-        (number? b) (if (string? a) (subs a b) (drop b a))
-        (and (string? a) (string? b)) (if (= (str/lower-case a) (str/lower-case b)) 1 0)
-        :else a))))
+      (let [[lst ar] (sortTypes sequential? identity a b)]
+        (if (some? lst)
+          (matchp ar
+                  number? (drop ar lst)
+                  string? (vectorise dropF lst ar lst)
+                  lst)
+          (cond
+            (and (string? a) (string? b)) (if (= (str/lower-case a) (str/lower-case b)) 1 0)
+            :else a))))))
 
 (defn even [x] (matchp x
-                       sequential? (map-indexed vector x)
-                       number? (if (== 0 (mod x 2)) 1 0)
-                       string? (map-indexed #(vector %1 (str %2)) x)
-                       x))
+                      sequential? (map-indexed vector x)
+                      number? (if (== 0 (mod x 2)) 1 0)
+                      string? (map-indexed #(vector %1 (str %2)) x)
+                      x))
 
 (defn everyNth [a b c]
   (let [[f n arg] (sortTypes fn? number? identity a b c)
