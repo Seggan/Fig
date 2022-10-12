@@ -61,29 +61,30 @@
     :else (= a b)))
 
 (defn evalString [s]
-  (cond
-    (re-matches numberRegex s) (readNumber s)
-    (and (str/starts-with? s "[") (str/ends-with? s "]"))
-    (let [stripped (subs s 1 (dec (count s)))]
-      (if (str/blank? stripped)
-        []
-        (loop [string ""
-               consuming (rest stripped)
-               quoting false
-               result (vector)
-               brackets 0
-               c (first stripped)]
-          (cond
-            (empty? consuming) (let [full (str string c)] (if (str/blank? full) result (conj result (evalString full))))
-            (= c \") (recur (str string c) (rest consuming) (not quoting) brackets result (first consuming))
-            (not quoting) (cond
-                            (= c \[) (recur (str string c) (rest consuming) quoting result (inc brackets) (first consuming))
-                            (= c \]) (recur (str string c) (rest consuming) quoting result (dec brackets) (first consuming))
-                            (and (= c \,) (zero? brackets)) (recur "" (rest consuming) quoting (conj result (evalString string)) 0 (first consuming))
-                            :else (recur (str string c) (rest consuming) quoting result brackets (first consuming)))
-            :else (recur (str string c) (rest consuming) quoting result brackets (first consuming))))))
-    (and (str/starts-with? s "\"") (str/ends-with? s "\"")) (subs s 1 (dec (count s)))
-    :else s))
+  (let [s (str/trim s)]
+    (cond
+      (re-matches numberRegex s) (readNumber s)
+      (and (str/starts-with? s "[") (str/ends-with? s "]"))
+      (let [stripped (subs s 1 (dec (count s)))]
+        (if (str/blank? stripped)
+          []
+          (loop [string ""
+                 consuming (rest stripped)
+                 quoting false
+                 result (vector)
+                 brackets 0
+                 c (first stripped)]
+            (cond
+              (empty? consuming) (let [full (str string c)] (if (str/blank? full) result (conj result (evalString full))))
+              (= c \") (recur (str string c) (rest consuming) (not quoting) brackets result (first consuming))
+              (not quoting) (cond
+                              (= c \[) (recur (str string c) (rest consuming) quoting result (inc brackets) (first consuming))
+                              (= c \]) (recur (str string c) (rest consuming) quoting result (dec brackets) (first consuming))
+                              (and (= c \,) (zero? brackets)) (recur "" (rest consuming) quoting (conj result (evalString string)) 0 (first consuming))
+                              :else (recur (str string c) (rest consuming) quoting result brackets (first consuming)))
+              :else (recur (str string c) (rest consuming) quoting result brackets (first consuming))))))
+      (and (str/starts-with? s "\"") (str/ends-with? s "\"")) (subs s 1 (dec (count s)))
+      :else s)))
 
 (defn fromBase [n base] (let [res (reduce #(+' (*' %1 base) %2) (cons (math/abs (first n)) (rest n)))]
                           (if (neg? (first n)) (-' res) res)))
@@ -91,17 +92,19 @@
 (defn printF
   ([obj] (printF obj "\n"))
   ([obj end]
-   (if (sequential? obj)
-     (do
-       (print \[)
-       (loop [coll (seq obj)]
-         (when coll
-           (printF (first coll) nil)
-           (when (next coll)
-             (print ", ")
-             (recur (next coll)))))
-       (print \]))
-     (print (str obj)))
+   (cond
+     (sequential? obj) (do
+                         (print \[)
+                         (loop [coll (seq obj)]
+                           (when coll
+                             (printF (first coll) nil)
+                             (when (next coll)
+                               (print ", ")
+                               (recur (next coll)))))
+                         (print \]))
+     (string? obj) (printf "\"%s\"" obj)
+     (decimal? obj) (print (.toPlainString (.stripTrailingZeros obj)))
+     :else (print (str obj)))
    (when (some? end) (print end))
    (flush)
    obj))
