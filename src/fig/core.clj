@@ -11,6 +11,11 @@
            (java.math MathContext RoundingMode)
            (java.nio.charset StandardCharsets)))
 
+(defn- evalLine [toks input doDebug]
+  (let [parsed (parsing/parse toks)]
+    (when doDebug (println parsed))
+    (interp/interpretProgram parsed (if (sequential? input) input (vector input)))))
+
 (defn -main
   [& args]
   (let [mode (first args)
@@ -30,11 +35,12 @@
                               (.setContents (StringSelection. (.toString sb)) nil))
                           (print (str sb))
                           (println "Copied to clipboard"))
-      (or (= "run" mode) (= "debugRun" mode)) (let [lexed (parsing/lex code)]
+      (or (= "run" mode) (= "debugRun" mode)) (let [lexed (parsing/lex code)
+                                                    input (map evalString (rest (rest args)))]
                                                 (when (= "debugRun" mode) (println lexed))
-                                                (let [parsed (parsing/parse lexed)
-                                                      input (map evalString (rest (rest args)))]
-                                                  (when (= "debugRun" mode) (println parsed))
-                                                  (reset! interp/programInput (.iterator (cycle input)))
-                                                  (fig.helpers/printF (interp/interpretProgram parsed input))))
+                                                (reset! interp/programInput (.iterator (if (seq input) (cycle input) (repeat 0))))
+                                                (let [result (reduce #(evalLine %2 %1 (= "debugRun" mode)) input lexed)
+                                                      last (ffirst (parsing/parse (last lexed)))]
+                                                  (when-not (or (= last :print) (= last :println))
+                                                    (fig.helpers/printF result))))
       :else (println "Usage: fig <mode> <file> [args...]"))))

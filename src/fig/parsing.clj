@@ -7,14 +7,14 @@
 (def ^:private tokenMap {")"  :closer
                          "'"  :functionRef
                          "@"  :operatorRef
-                         "u"  :unpack
-                         "\n" :endFunction})
+                         "u"  :unpack})
 
 (defn- whereValue [pred map] (-> #(pred (second %)) (filter map) (first) (first)))
 
 (defn lex [s]
   (let [input (str/replace s "\r" "")
         tokens (atom (vector))
+        lines (atom (vector))
         i (atom 0)]
     (while (< @i (count input))                             ; I went for a definitely non-functional while loop
       (let [c (str (get input @i))]
@@ -31,6 +31,9 @@
                          (swap! i inc))
                        (swap! tokens conj (list :string @string))
                        (swap! i inc))
+          (= c "\n") (do
+                       (swap! lines conj @tokens)
+                       (reset! tokens (vector)))
           (= c "D") (let [string (atom "")]
                       (while (and (< @i (count input))
                                   (not= (get input @i) \"))
@@ -58,9 +61,11 @@
                                     (swap! i inc))
           (contains? tokenMap c) (swap! tokens conj (list (get tokenMap c)))
           :else (swap! tokens conj (list :operator (whereValue #(= (:symbol %) (str c)) ops/operators))))))
-    (deref tokens)))
-
-(def ^:private isEnding (atom false))
+    (let [remaining (deref tokens)
+          ls (deref lines)]
+      (if (empty? remaining)
+        ls
+        (conj ls remaining)))))
 
 (declare ^:private parseOperator)
 (declare ^:private parse)
@@ -72,14 +77,11 @@
     (cond
       (or (= tokenType :string) (= tokenType :number)) (list :constant (second token))
       (= tokenType :operator) (parseOperator token tokens)
-      (= tokenType :functionRef) (do
-                                   (reset! isEnding false)
-                                   (list :functionRef (parseToken (consume tokens) tokens)))
+      (= tokenType :functionRef) (list :functionRef (parseToken (consume tokens) tokens))
       (= tokenType :operatorRef) (let [[type op] (consume tokens)]
                                    (if (= :number type)
                                      (list :constant (expt 10 (bigint op)))
                                      (list :functionRef (list op (repeat (ops/attr op :arity) (list :input))))))
-      (= tokenType :endFunction) (do (reset! isEnding true) :nop)
       (nil? tokenType) (throw "Unexpected end of input")
       :else :nop)))
 
@@ -87,14 +89,14 @@
   (let [op (second token)
         arity (ops/attr op :arity)]
     (list op (if (= arity -1)
-               (let [cond #(and (not= (first %) :closer) (not= (first %) :endFunction))
+               (let [cond #(not= (first %) :closer)
                      args (parse (take-while cond @tokens))]
                  (reset! tokens (rest (drop-while cond @tokens)))
                  args)
                (let [args (atom (vector))]
                  (loop [i 0]
                    (if (< i arity)
-                     (if (or (empty? @tokens) @isEnding)
+                     (if (empty? @tokens)
                        (swap! args concat (repeat (- arity i) (list :input)))
                        (let [next (consume tokens)
                              nextType (first next)]
@@ -102,19 +104,14 @@
                            (do
                              (swap! args conj (parseToken (consume tokens) tokens))
                              (swap! args concat (repeat (- arity (inc i)) (list :lastReturnValue '()))))
-                           (if (= nextType :endFunction)
-                             (do
-                               (reset! isEnding true)
-                               (recur i))
-                             (do
-                               (swap! args conj (parseToken next tokens))
-                               (recur (inc i)))))))
+                           (do
+                             (swap! args conj (parseToken next tokens))
+                             (recur (inc i))))))
                      (deref args))))))))
 
 (defn parse [tokens]
   (let [toks (atom tokens)
         parsed (atom (vector))]
     (while (seq @toks)
-      (reset! isEnding false)
       (swap! parsed conj (parseToken (consume toks) toks)))
     (deref parsed)))
