@@ -43,7 +43,7 @@
                       x))
 
 (defn any [x] (matchp x
-                      sequential? (elvis (some bool x) 0)
+                      sequential? (if (some bool x) 1 0)
                       number? (range 1 (inc x))
                       string? (str/lower-case x)
                       x))
