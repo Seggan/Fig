@@ -170,6 +170,12 @@
         (and (string? a) (string? b)) (str/join (interleave a b))
         :else a))))
 
+(defn iterateF [a b c]
+  (let [[f i n] (sortTypes fn? number? identity a b c)]
+    (if (some? f)
+      (take i (generate f n))
+      a)))
+
 (defn lessThan [a b] (vectorise lessThan a b (if (< (cmp b a) 0) 1 0)))
 
 (defn locate [a b] (matchp b
@@ -410,6 +416,7 @@
                 :even            {:symbol "E" :arity 1 :impl even}
                 :filter          {:symbol "F" :arity 2 :impl filterF}
                 :generate        {:symbol "G" :arity 2 :impl generate}
+                :iterate         {:symbol "#G" :arity 3 :impl iterateF}
                 :halve           {:symbol "H" :arity 1 :impl halve}
                 :count           {:symbol "I" :arity 2 :impl (fn [a b] (count (filter #(equal a %) (listify b))))}
                 :addToEnd        {:symbol "J" :arity 2 :impl addToEnd}
