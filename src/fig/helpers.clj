@@ -89,6 +89,15 @@
 (defn fromBase [n base] (let [res (reduce #(+' (*' %1 base) %2) (cons (math/abs (first n)) (rest n)))]
                           (if (neg? (first n)) (-' res) res)))
 
+(defn isPrime [x]
+  (cond
+    (< x 2) 0
+    (seq (filter (partial equal x) [2 3 5])) 1
+    (some zero? (map #(mod x %) [2 3 5])) 0
+    :else (let [limit (math/ceil (math/sqrt x))]
+            (loop [i 7]
+              (if (> i limit) 1 (if (zero? (mod x i)) 0 (recur (+' i 2))))))))
+
 (defn printF
   ([obj] (printF obj "\n"))
   ([obj end] (printF obj end false))

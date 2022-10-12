@@ -116,7 +116,7 @@
     (matchp coll
             sequential? (filter func coll)
             string? (str/join (filter func (listify coll)))
-            number? (applyOnParts #(filter func (digits %)) coll)
+            number? (filter func (range 1 (inc' coll)))
             (let [l (listify a)
                   check #(not (some (fn p [n] (equal n %)) l))]
               (matchp b
@@ -190,7 +190,7 @@
     (matchp coll
             sequential? (map f coll)
             string? (strmapstr f coll)
-            number? (applyOnParts #(f (digits %)) coll)
+            number? (map f (range 1 (inc' coll)))
             fn? (comp a b)
             (let [replacer (fn [_] a)]
               (matchp b
@@ -271,13 +271,7 @@
 (defn restF [x] (matchp x
                         string? (subs x 1)
                         sequential? (rest (listify x))
-                        number? (cond
-                                  (< x 2) 0
-                                  (seq (filter (partial equal x) [2 3 5])) 1
-                                  (some zero? (map #(mod x %) [2 3 5])) 0
-                                  :else (let [limit (math/ceil (math/sqrt x))]
-                                          (loop [i 7]
-                                            (if (> i limit) 1 (if (zero? (mod x i)) 0 (recur (+' i 2)))))))))
+                        number? (if (isPrime x) 1 0)))
 
 (defn reverseF [x] (matchp x
                            sequential? (reverse x)
@@ -499,6 +493,7 @@
                 :pi              {:symbol "mP" :arity 0 :impl (const 3.14159265358979323846264338327950288419716939937510M)}
                 :countingNumbers {:symbol "mC" :arity 0 :impl (const (iterate inc' 1))}
                 :naturalNumbers  {:symbol "mN" :arity 0 :impl (const (iterate inc' 0))}
+                :primes          {:symbol "mp" :arity 0 :impl (const (filter isPrime (iterate inc' 2)))}
 
                 :mean            {:symbol "mM" :arity 1 :impl #(with-precision 128 (/ (reduceF % add) (count %)))}
                 :square          {:symbol "mQ" :arity 1 :impl (vectoriseFn #(*' % %))}
