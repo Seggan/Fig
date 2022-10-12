@@ -227,6 +227,7 @@
 (defn odd [x] (matchp x
                       sequential? (str/join (flatten x))
                       number? (mod x 2)
+                      fn? (with-meta x (assoc (meta x) :figArity 1))
                       x))
 
 (defn prefixes [x]
@@ -346,10 +347,18 @@
 
 (defn truthyIndexes [x] (matchp x
                                 sequential? (keep-indexed #(if (bool %2) %1) x)
-                                fn? (with-meta x {:figArity 3})
+                                fn? (with-meta x (assoc (meta x) :figArity 3))
+                                number? (*' x 3)
+                                string? (.repeat x 3)
                                 x))
 
-(defn unhalve [x] (vectorise unhalve x (if (number? x) (*' x 2) (str x x))))
+(defn unhalve [x]
+  (vectorise unhalve x
+             (matchp x
+                     number? (*' x 2)
+                     string? (str x x)
+                     fn? (with-meta x (assoc (meta x) :figArity 2))
+                     x)))
 
 (defn uniquify [x] (matchp x
                            sequential? (distinct x)
