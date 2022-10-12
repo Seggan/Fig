@@ -14,7 +14,7 @@
 (defn- evalLine [toks input doDebug]
   (let [parsed (parsing/parse toks)]
     (when doDebug (println parsed))
-    (interp/interpretProgram parsed (if (sequential? input) input (vector input)))))
+    (interp/interpretProgram parsed input)))
 
 (defn -main
   [& args]
@@ -39,8 +39,8 @@
                                                     input (map evalString (rest (rest args)))]
                                                 (when (= "debugRun" mode) (println lexed))
                                                 (reset! interp/programInput (.iterator (if (seq input) (cycle input) (repeat 0))))
-                                                (let [result (reduce #(evalLine %2 %1 (= "debugRun" mode)) input lexed)
+                                                (let [result (reduce #(vector (evalLine %2 %1 (= "debugRun" mode))) input lexed)
                                                       last (ffirst (parsing/parse (last lexed)))]
                                                   (when-not (or (= last :print) (= last :println))
-                                                    (fig.helpers/printF result))))
+                                                    (fig.helpers/printF (first result)))))
       :else (println "Usage: fig <mode> <file> [args...]"))))

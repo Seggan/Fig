@@ -91,10 +91,10 @@
             :else a))))))
 
 (defn even [x] (matchp x
-                      sequential? (map-indexed vector x)
-                      number? (if (== 0 (mod x 2)) 1 0)
-                      string? (map-indexed #(vector %1 (str %2)) x)
-                      x))
+                       sequential? (map-indexed vector x)
+                       number? (if (== 0 (mod x 2)) 1 0)
+                       string? (map-indexed #(vector %1 (str %2)) x)
+                       x))
 
 (defn everyNth [a b c]
   (let [[f n arg] (sortTypes fn? number? identity a b c)
@@ -314,19 +314,18 @@
 (defn sum [x] (if (string? x) (reduce + (map int x)) (reduceF add (flatten (listify x)))))
 
 (defn takeF [a b]
-  (if (number? a)
-    (matchp b
-            sequential? (take a b)
-            string? (subs b 0 a)
-            number? (applyOnParts #(take a %) b)
-            a)
-    (let [[f arg] (sortTypes fn? identity a b)
-          func (comp bool f)]
-      (matchp arg
-              sequential? (take-while func arg)
-              string? (str/join (take-while func (listify arg)))
-              number? (applyOnParts #(take-while func (listify %)) arg)
-              a))))
+  (let [[num coll] (sortTypes number? identity a b)]
+    (matchp coll
+            sequential? (take num coll)
+            string? (subs coll 0 num)
+            number? (applyOnParts #(take num %) coll)
+            (let [[f arg] (sortTypes fn? identity a b)
+                  func (comp bool f)]
+              (matchp arg
+                      sequential? (take-while func arg)
+                      string? (str/join (take-while func (listify arg)))
+                      number? (applyOnParts #(take-while func (listify %)) arg)
+                      a)))))
 
 (defn ternaryIf [a b c] (if (bool (interpret a)) (interpret b) (interpret c)))
 
