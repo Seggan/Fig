@@ -91,18 +91,19 @@
 
 (defn printF
   ([obj] (printF obj "\n"))
-  ([obj end]
+  ([obj end] (printF obj end false))
+  ([obj end quote]
    (cond
      (sequential? obj) (do
                          (print \[)
                          (loop [coll (seq obj)]
                            (when coll
-                             (printF (first coll) nil)
+                             (printF (first coll) nil true)
                              (when (next coll)
                                (print ", ")
                                (recur (next coll)))))
                          (print \]))
-     (string? obj) (printf "\"%s\"" obj)
+     (string? obj) ((if quote pr print) obj)
      (decimal? obj) (print (.toPlainString (.stripTrailingZeros obj)))
      :else (print (str obj)))
    (when (some? end) (print end))
