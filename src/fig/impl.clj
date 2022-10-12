@@ -269,8 +269,8 @@
                                   (seq (filter (partial equal x) [2 3 5])) 1
                                   (some zero? (map #(mod x %) [2 3 5])) 0
                                   :else (let [limit (math/ceil (math/sqrt x))]
-                                          (loop [i 6 step 4]
-                                            (if (> i limit) 1 (if (zero? (mod x i)) 0 (recur (+' i (- 6 step)) (- 6 step)))))))))
+                                          (loop [i 7]
+                                            (if (> i limit) 1 (if (zero? (mod x i)) 0 (recur (+' i 2)))))))))
 
 (defn reverseF [x] (matchp x
                            sequential? (reverse x)
