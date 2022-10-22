@@ -91,12 +91,12 @@
 
 (defn isPrime [x]
   (cond
-    (< x 2) 0
-    (seq (filter (partial equal x) [2 3 5])) 1
-    (some zero? (map #(mod x %) [2 3 5])) 0
+    (< x 2) false
+    (seq (filter (partial equal x) [2 3 5])) true
+    (some zero? (map #(mod x %) [2 3 5])) false
     :else (let [limit (math/ceil (math/sqrt x))]
             (loop [i 7]
-              (if (> i limit) 1 (if (zero? (mod x i)) 0 (recur (+' i 2))))))))
+              (if (> i limit) true (if (zero? (mod x i)) false (recur (+' i 2))))))))
 
 (defn printF
   ([obj] (printF obj "\n"))
