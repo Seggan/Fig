@@ -4,10 +4,10 @@
             [fig.impl :as ops])
   (:use [clojure.math.numeric-tower :only [expt]]))
 
-(def ^:private tokenMap {")"  :closer
-                         "'"  :functionRef
-                         "@"  :operatorRef
-                         "u"  :unpack})
+(def ^:private tokenMap {")" :closer
+                         "'" :functionRef
+                         "@" :operatorRef
+                         "u" :unpack})
 
 (defn- whereValue [pred map] (-> #(pred (second %)) (filter map) (first) (first)))
 
@@ -46,7 +46,11 @@
                                                        (< @i (count input)))
                                              (swap! n str (get input @i))
                                              (swap! i inc))
-                                           (swap! tokens conj (list :number (bigdec (str @n)))))
+                                           (swap! tokens conj (list :number (bigdec
+                                                                              (let [num (str @n)]
+                                                                                (if (= num ".")
+                                                                                  "0.5"
+                                                                                  num))))))
           (= c "0") (swap! tokens conj (list :number 0))
           (and (= c "#") (= (get input @i) \space)) (do
                                                       (while (not= (get input @i) \newline) (swap! i inc))
