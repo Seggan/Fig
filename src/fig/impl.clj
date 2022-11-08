@@ -132,7 +132,7 @@
                      x)))
 
 (defn fromDigits [x]
-  (if (sequential? x) (readNumber (str/join x))) x)
+  (if (sequential? x) (readNumber (str/join x)) x))
 
 (defn generate [a b]
   (let [[f i] (sortTypes fn? identity a b)]
@@ -152,6 +152,13 @@
                      len (count s)
                      half (/ len 2)]
                  (list (subs s 0 half) (subs s half len))))))
+
+(defn hexConvert [x]
+  (vectorise hexConvert x
+             (matchp x
+                     number? (str/join (map (partial get "0123456789ABCDEF") (toBase x 16)))
+                     string? (fromBase (map (partial str/index-of "0123456789ABCDEF") (str/upper-case x)) 16)
+                     x)))
 
 (defn index [a b]
   (let [[f arg] (sortTypes fn? identity a b)]
@@ -279,6 +286,8 @@
                            number? (applyOnParts #(str/reverse %) x)
                            x))
 
+(defn reverseNode [x] (interpret (list (first x) (reverse (second x)))))
+
 (defn sortBy [a b]
   (let [[f arg] (sortTypes fn? identity a b)
         func (comp numify f)]
@@ -395,7 +404,7 @@
                 :add             {:symbol "+" :arity 2 :impl add}
                 :println         {:symbol "," :arity 1 :impl printF}
                 :subtract        {:symbol "-" :arity 2 :impl subtract}
-                :pair            {:symbol ":" :arity 1 :impl #(vector % %)}
+                :reverseNode     {:symbol ":" :arity 1 :impl reverseNode :macro true}
                 :print           {:symbol ";" :arity 1 :impl #(printF % nil)}
                 :lessThan        {:symbol "<" :arity 2 :impl greaterThan}
                 :equals          {:symbol "=" :arity 2 :impl equals}
@@ -495,6 +504,7 @@
                 :naturalNumbers  {:symbol "mN" :arity 0 :impl (const (iterate inc' 0))}
                 :primes          {:symbol "mp" :arity 0 :impl (const (filter isPrime (iterate inc' 2)))}
 
+                :hexConvert      {:symbol "mH" :arity 1 :impl hexConvert}
                 :mean            {:symbol "mM" :arity 1 :impl #(with-precision 128 (/ (reduceF % add) (count %)))}
                 :square          {:symbol "mQ" :arity 1 :impl (vectoriseFn #(*' % %))}
                 :squareRoot      {:symbol "mq" :arity 1 :impl (vectoriseFn math/sqrt)}})
