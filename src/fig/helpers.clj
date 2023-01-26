@@ -1,6 +1,7 @@
 (ns fig.helpers
   (:require [clojure.math.numeric-tower :as math]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+  (:import (java.util.regex Pattern)))
 
 (def numberRegex #"^-?\d+(\.\d+)?$")
 
@@ -158,6 +159,8 @@
 (defn numify [x] (if (number? x) x (count x)))
 
 (defn readNumber [x] (if (re-matches numberRegex x) (bigdec x) x))
+
+(defn regex? [x] (instance? Pattern x))
 
 (defn sortTypes
   ([t1 t2 a b] (cond

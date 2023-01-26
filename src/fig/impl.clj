@@ -4,7 +4,8 @@
             [fig.chars :as chars]
             [fig.compression :as compression])
   (:use [fig.helpers])
-  (:import (ch.obermuhlner.math.big DefaultBigDecimalMath)))
+  (:import (ch.obermuhlner.math.big DefaultBigDecimalMath)
+           (java.util.regex Pattern)))
 
 ; Stuff needed by the interpreter
 
@@ -67,7 +68,8 @@
   (vectorise divide a b
              (cond
                (and (number? a) (number? b)) (with-precision 128 (/ b a))
-               (string? b) (str/split b (re-pattern (str/re-quote-replacement (str a))))
+               (regex? a) (str/split b a)
+               (string? b) (str/split b (re-pattern (Pattern/quote (str a))))
                :else a)))
 
 (defn dropF [a b]
