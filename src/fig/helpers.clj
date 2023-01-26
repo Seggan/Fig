@@ -21,6 +21,34 @@
 
 (defn collContains [coll x] (some #(if (and (number? x) (number? %)) (== x %) (= x %)) coll))
 
+(defn reverseBracket [c] (condp = (str c)
+                           "(" ")"
+                           "[" "]"
+                           "{" "}"
+                           ")" "("
+                           "]" "["
+                           "}" "{"
+                           (str c)))
+
+(defn completeBrackets
+  ([s] (completeBrackets s 0 (list)))
+  ([s i stack]
+   (if (< i (count s))
+     (let [c (str (nth s i))]
+       (if (not= c "\\")
+         (if (str/includes? "([{" c)
+           (if (and (= c "(") (seq stack))
+             (recur (str (subs s 0 i) (reverseBracket (peek stack)) (subs s i)) (inc i) (pop stack))
+             (recur s (inc i) (conj stack c)))
+           (if (str/includes? ")]}" c)
+             (let [last (peek stack)]
+               (if (= c (reverseBracket last))
+                 (recur s (inc i) (pop stack))
+                 (recur s (inc i) stack)))
+             (recur s (inc i) stack)))
+         (recur s (inc i) stack)))
+     (list s (str/join (map reverseBracket stack))))))
+
 (defn cmp [a b] (cond
                   (and (number? a) (number? b)) (compare a b)
                   (and (string? a) (re-matches numberRegex a) (number? b)) (cmp (readNumber a) b)

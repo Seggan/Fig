@@ -266,6 +266,12 @@
               number? (reduce func (digits coll))
               a))))
 
+(defn regex [x]
+  (re-pattern
+    (str/join (completeBrackets
+                (str/join (map reverseBracket (reverse (str/join (completeBrackets
+                                                                   (str/join (map reverseBracket (reverse x))))))))))))
+
 (defn removeF [a b]
   (let [[f arg] (sortTypes fn? identity a b)]
     (if (some? arg)
@@ -396,6 +402,7 @@
 
 (def operators {
                 :logicalNot      {:symbol "!" :arity 1 :impl #(if (bool %) 0 1)}
+                :regex           {:symbol "#" :arity 1 :impl regex}
                 :reverse         {:symbol "$" :arity 1 :impl reverseF}
                 :modulo          {:symbol "%" :arity 2 :impl modulo}
                 :bitAnd          {:symbol "&" :arity 2 :impl #(bit-and (long %1) (long %2))}
