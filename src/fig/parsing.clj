@@ -55,11 +55,11 @@
           (and (= c "#") (= (get input @i) \space)) (do
                                                       (while (not= (get input @i) \newline) (swap! i inc))
                                                       (swap! i inc))
-          (and (= c "#") (str/includes? "\"D012345679." (str (get input @i)))) (swap! tokens conj (list
-                                                                                                    :operator
-                                                                                                    (whereValue
-                                                                                                      #(= "#" (:symbol %))
-                                                                                                      ops/operators)))
+          (and (= c "#") (str/includes? "\"012345679." (str (get input @i)))) (swap! tokens conj (list
+                                                                                                   :operator
+                                                                                                   (whereValue
+                                                                                                     #(= "#" (:symbol %))
+                                                                                                     ops/operators)))
 
           (= c "/") (do
                       (swap! tokens conj (list :string (str (get input @i))))
