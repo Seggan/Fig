@@ -66,11 +66,12 @@
 
 (defn divide [a b]
   (vectorise divide a b
-             (cond
-               (and (number? a) (number? b)) (with-precision 128 (/ b a))
-               (regex? a) (str/split b a)
-               (string? b) (str/split b (re-pattern (Pattern/quote (str a))))
-               :else a)))
+             (if-some [[re s] (sortTypes regex? identity a b)]
+               (str/split (str s) re)
+               (cond
+                 (and (number? a) (number? b)) (with-precision 128 (/ b a))
+                 (string? b) (str/split b (re-pattern (Pattern/quote (str a))))
+                 :else a))))
 
 (defn dropF [a b]
   (let [[f arg] (sortTypes fn? identity a b)
@@ -113,18 +114,20 @@
       (if (equal a b) 1 0))))
 
 (defn filterF [a b]
-  (let [[f coll] (sortTypes fn? identity a b)
-        func (comp bool f)]
-    (matchp coll
-            sequential? (filter func coll)
-            string? (str/join (filter func (listify coll)))
-            number? (filter func (range 1 (inc' coll)))
-            (let [l (listify a)
-                  check #(not (some (fn p [n] (equal n %)) l))]
-              (matchp b
-                      string? (str/join (filter check (listify b)))
-                      sequential? (filter check b)
-                      b)))))
+  (if-some [[re s] (sortTypes regex? identity a b)]
+    (elvis (first (re-find re (str s))) 0)
+    (let [[f coll] (sortTypes fn? identity a b)
+          func (comp bool f)]
+      (matchp coll
+              sequential? (filter func coll)
+              string? (str/join (filter func (listify coll)))
+              number? (filter func (range 1 (inc' coll)))
+              (let [l (listify a)
+                    check #(not (some (fn p [n] (equal n %)) l))]
+                (matchp b
+                        string? (str/join (filter check (listify b)))
+                        sequential? (filter check b)
+                        b))))))
 
 (defn floor [x]
   (vectorise floor x
@@ -137,12 +140,13 @@
   (if (sequential? x) (readNumber (str/join x)) x))
 
 (defn generate [a b]
-  (let [[f i] (sortTypes fn? identity a b)]
-    (if (some? f)
-      (map first (iterate #(rest (append % (apply f %))) (take
-                                                           (elvis (:figArity (meta f)) 1)
-                                                           (cycle (if (seqable? i) i (list i))))))
-      (if (>= (cmp a b) 0) a b))))
+  (if-some [[f i] (sortTypes fn? identity a b)]
+    (map first (iterate #(rest (append % (apply f %))) (take
+                                                         (elvis (:figArity (meta f)) 1)
+                                                         (cycle (if (seqable? i) i (list i))))))
+    (if-some [[re s] (sortTypes regex? identity a b)]
+        (rest (re-matches re (str s)))
+        (if (>= (cmp a b) 0) a b))))
 
 (defn greaterThan [a b] (vectorise greaterThan a b (if (> (cmp b a) 0) 1 0)))
 
@@ -195,19 +199,21 @@
 (defn loopForever [& x] (loop [] (run! interpret x) (recur)))
 
 (defn mapF [a b]
-  (let [[f coll] (sortTypes fn? identity a b)]
-    (matchp coll
-            sequential? (map f coll)
-            string? (strmapstr f coll)
-            number? (map f (range 1 (inc' coll)))
-            fn? (comp a b)
-            (let [replacer (fn [_] a)]
-              (matchp b
-                      string? (strmapstr replacer b)
-                      sequential? (map replacer b)
-                      number? (applyOnParts #(repeat (count %) a) b)
-                      fn? (fn [& _] a)
-                      a)))))
+  (if-some [[re s] (sortTypes regex? identity a b)]
+    (elvis (re-matches re (str s)) 0)
+    (let [[f coll] (sortTypes fn? identity a b)]
+      (matchp coll
+              sequential? (map f coll)
+              string? (strmapstr f coll)
+              number? (map f (range 1 (inc' coll)))
+              fn? (comp a b)
+              (let [replacer (fn [_] a)]
+                (matchp b
+                        string? (strmapstr replacer b)
+                        sequential? (map replacer b)
+                        number? (applyOnParts #(repeat (count %) a) b)
+                        fn? (fn [& _] a)
+                        a))))))
 
 (defn modulo [a b]
   (cond
